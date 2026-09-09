@@ -62,6 +62,9 @@ proxy-groups:
   - name: "📽️ International Media"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+  - name: "📱 TikTok"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇨🇳 Taiwan Node]
   - name: "🖥️ Microsoft Services"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
@@ -342,7 +345,7 @@ rules:
   - RULE-SET,disney,📽️ International Media
   - RULE-SET,primevideo,📽️ International Media
   - RULE-SET,hbo,📽️ International Media
-  - RULE-SET,tiktok,📽️ International Media
+  - RULE-SET,tiktok,📱 TikTok
   - RULE-SET,emby,📽️ Emby
   - RULE-SET,steam,🎮 Gaming Platforms
   - RULE-SET,epic,🎮 Gaming Platforms
