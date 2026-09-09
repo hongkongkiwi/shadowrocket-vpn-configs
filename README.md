@@ -37,6 +37,24 @@ Module URLs (after push), e.g.:
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/httpdns-block.module
 ```
 
+## Apple Silicon Mac
+
+Shadowrocket runs natively on Apple Silicon Macs (iOS app on macOS) — **same
+config, same modules, same import URLs**. No separate desktop config needed;
+forking the wrapper but sharing the rule-sets would just double maintenance.
+
+Mac notes:
+- `skip-proxy` already covers localhost, `*.local` and all RFC1918 ranges, so
+  local dev servers, Docker NAT (10.x) and Apple Virtualization guest networks
+  (192.168.64.0/24 ⊂ 192.168.0.0/16) stay direct.
+- The `[Host]` entry `iosapps.itunes.apple.com = ...ks-cdn.com` is iOS-only;
+  harmless on Mac (App Store on macOS doesn't use that host).
+- If a CLI tool (curl, git, Claude Code) doesn't go through the tunnel, enable
+  **TUN / Force Routing** in Shadowrocket settings — the proxy is HTTP-only for
+  apps that don't honor system proxy by default.
+- Optional Mac tweak: append your machine's dev domains to `skip-proxy` rather
+  than forking the config.
+
 Per-app unlock/ad-removal modules (知乎/微博/B站/YouTube 去广告, VIP unlocks etc.)
 are intentionally **not** vendored here — import individually from
 [deezertidal/shadowrocket-rules](https://github.com/deezertidal/shadowrocket-rules)
