@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+._*
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local environment and private keys
+.env
+.env.*
+!.env.example
+*.key
+*.p12
+*.pfx
