@@ -1,0 +1,9 @@
+#!name = Andy Adblock — Aggressive
+#!desc = Extra Chinese-app ads + massive auto-generated list (~2MB, slower first load). Enable only together with Core module.
+#!category = Adblock
+
+[Rule]
+# anti-AD — China-focused ad domains, huge (Surge syntax = Shadowrocket-compatible)
+RULE-SET,https://anti-ad.net/surge.txt,REJECT
+# Johnshall ad-only rules — auto-built daily from EasyList China etc., ~2MB, overlaps the lists above heavily
+RULE-SET,https://johnshall.github.io/Shadowrocket-ADBlock-Rules-Forever/sr_ad_only.conf,REJECT

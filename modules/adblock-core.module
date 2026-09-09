@@ -1,0 +1,12 @@
+#!name = Andy Adblock — Core
+#!desc = Core ad/tracker blocking (mainstream, low false-positive risk). Toggle on/off in Modules.
+#!category = Adblock
+
+# Order inside a module doesn't matter much (module rules all outrank config rules),
+# but blackmatrix7 Advertising is the safest big list. URL-REGEX entries need MITM+ decryption.
+
+[Rule]
+# blackmatrix7 Advertising — ~280k domains, Shadowrocket-native, updated daily
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising.list,REJECT
+# blackmatrix7 Privacy — tracking/analytics endpoints
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Privacy.list,REJECT

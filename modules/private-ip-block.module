@@ -1,0 +1,6 @@
+#!name = Andy Privacy — Private IP Block
+#!desc = Blocks responses returning private/loopback IPs from public domains (DNS rebinding protection). Complements private-ip-answer = true in config. Occasional false positives possible — toggle off if an app breaks.
+#!category = Privacy
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Forbidden/Forbidden.list,REJECT

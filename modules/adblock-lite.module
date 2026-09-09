@@ -1,0 +1,7 @@
+#!name = Andy Adblock — Lite
+#!desc = Conservative adblock (~38k domains). Use instead of Core on older devices, or if Core/Aggressive breaks something. Off = full config rules only.
+#!category = Adblock
+
+[Rule]
+# blackmatrix7 AdvertisingLite — smaller curated subset of Advertising
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/AdvertisingLite/AdvertisingLite.list,REJECT
