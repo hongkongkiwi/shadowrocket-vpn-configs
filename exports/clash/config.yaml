@@ -64,7 +64,7 @@ proxy-groups:
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
   - name: "📱 TikTok"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇨🇳 Taiwan Node]
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇨🇳 Taiwan Node, DIRECT]
   - name: "🖥️ Microsoft Services"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
