@@ -38,6 +38,10 @@ dns:
     - "+.logon.battlenet.com.cn"
     - "+.logon.battle.net"
     - "stun.l.google.com"
+    - "gateway.icloud.com"
+    - "apple-relay.cloudflare.com"
+    - "cp4.cloudflare.com"
+    - "apple-relay.fastly-edge.com"
     - "+.cmpassport.com"
     - "id6.me"
     - "open.e.189.cn"
@@ -352,6 +356,13 @@ rules:
   # Apple push first, rest of Apple after (mirrors Apple-Push + AppleCN/AppleServers order)
   - RULE-SET,apple,🍎 Apple Services
   - RULE-SET,applecn,🍎 Apple Services
+  # Apple Intelligence / Private Cloud Compute / iCloud gateway - keep DIRECT
+  - DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
+  - DOMAIN,apple-relay.cloudflare.com,DIRECT
+  - DOMAIN,cp4.cloudflare.com,DIRECT
+  - DOMAIN,apple-relay.fastly-edge.com,DIRECT
+  - DOMAIN,gdmf.apple.com,DIRECT
+  - DOMAIN,swscan.apple.com,DIRECT
   # CN direct (domain first, then geo fallback)
   - RULE-SET,chinadirect,DIRECT
   - RULE-SET,cn-ip,DIRECT,no-resolve
