@@ -77,7 +77,8 @@ are MITM rewrites: enable HTTPS decryption, and re-check them when apps update.
 - Adblock lists: blackmatrix7, [anti-AD](https://anti-ad.net),
   [Johnshall/Shadowrocket-ADBlock-Rules-Forever](https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever)
 - DNS/TUN hardening: [Johnshall lazy_group.conf](https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever/blob/release/lazy_group.conf)
-- CN lists: [carrnot/china-domain-list](https://github.com/carrnot/china-domain-list),
+- CN lists: [blackmatrix7 ChinaMax](https://github.com/blackmatrix7/ios_rule_script) (CN direct),
+  [carrnot/china-domain-list](https://github.com/carrnot/china-domain-list),
   [carrnot/china-ip-list](https://github.com/carrnot/china-ip-list)
 
 ## Security
