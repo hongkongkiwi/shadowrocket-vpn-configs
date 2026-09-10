@@ -1,6 +1,8 @@
 # Policy and client parity
 
-Shadowrocket has two location profiles: `hong-kong.conf` defaults only AI and
+Shadowrocket has two location profiles and a minimal `default.conf` profile.
+Default has only `FINAL,PROXY`, local-network exclusions, and no custom DNS or
+service rules; unsupported proxy UDP is rejected. `hong-kong.conf` defaults only AI and
 international TikTok to a proxy, with everything else direct; `mainland-china.conf`
 keeps the legacy routing defaults. Both include location-specific DNS. Optional
 modules and saved selections can override their defaults. The table below
@@ -14,10 +16,10 @@ Shared dependencies may need observed-host overrides after native testing.
 
 | Area | Shadowrocket | mihomo / Clash Meta | Surge | Quantumult X |
 |---|---|---|---|---|
-| Unmatched | `FINAL` to Fallback | final fallback group | final fallback group (default `PROXY`, initially a DIRECT placeholder) | final fallback policy |
+| Unmatched | `FINAL` to Fallback | final fallback group | final fallback group (default `PROXY`, initially a REJECT placeholder) | final fallback policy |
 | China | ChinaMax and `GEOIP,CN` direct; travel module optional | native China providers direct | native China rules direct | China rules force `direct` |
 | Ads | None in base; Core or Lite, Aggressive only on Core | none in export | none in export | none in export |
-| AI | Eleven provider selectors including both Copilots, Cursor, Perplexity, xAI, Hugging Face, Windsurf and JetBrains; US first; shared dependencies excluded | same US defaults | same US defaults | same US defaults |
+| AI | Eleven provider selectors including both Copilots, Cursor, Perplexity, xAI, Hugging Face, Windsurf and JetBrains; selected proxy first; shared dependencies excluded | same proxy defaults | same proxy defaults | same proxy defaults |
 | GitHub | General API/auth in Developer Services; Copilot API separate | same | same | same |
 | Streaming | YouTube, Netflix, Disney+, Prime Video, HBO, Bahamut separate | separate | separate | separate |
 | Apple | App Downloads, Updates, Siri, PCC, Push, Account, then Services | built into export | policy plus direct certificate exceptions | policy plus direct certificate exceptions |
@@ -30,7 +32,7 @@ Shared dependencies may need observed-host overrides after native testing.
 | IPv6 | disabled by base; optional enable/prefer modules | disabled in profile and DNS | disabled in profile | client default |
 
 The App Store alias is absent from all exports. mihomo is a merge
-fragment with no nodes. Surge's `PROXY = select, DIRECT` is a placeholder,
+fragment with no nodes. Surge's `PROXY = select, REJECT` is a placeholder,
 not a working proxy: replace it before relying on tunnelling. Its regional
 groups include `[Proxy]` entries and resolved members of `PROXY`, then filter
 by name. Empty regional groups remain possible until matching nodes exist.

@@ -16,7 +16,7 @@ The mihomo file is a merge fragment. Merge its `proxy-groups`,
 `rule-providers`, and `rules` into the profile that supplies `proxies:` or
 `proxy-providers:`. Empty groups are expected before a subscription is merged.
 
-In Surge, replace the `PROXY = select, DIRECT` placeholder with named proxies
+In Surge, replace the `PROXY = select, REJECT` placeholder with named proxies
 or a subscription policy before testing proxy behavior. Quantumult X nodes
 must be present in its Server tab so the built-in `proxy` candidate can select
 one.
@@ -24,13 +24,14 @@ one.
 Surge regional groups include proxies declared in `[Proxy]` and nodes imported
 through `PROXY` (for example with `policy-path`), then filter by node name.
 See [Surge's policy inclusion rules](https://manual.nssurge.com/policy-groups/policy-including.html).
-The placeholder itself sends traffic directly, and a region without matching
+The placeholder itself rejects traffic, and a region without matching
 nodes remains unusable. A country label does not verify an exit IP.
 
 Every service selector offers `DIRECT` for local access, including Hong Kong.
-Siri starts on `DIRECT`; PCC and all AI provider selectors start on the US
-group, matching the base profile. A fresh import requires matching US nodes or
-a manual selection. This does not automatically switch settings when you travel.
+Siri starts on `DIRECT`; PCC, international TikTok, and all AI provider selectors
+start on `PROXY` (`proxy` in Quantumult X), matching the base profile. Configure
+that proxy for the service you need; no US node is required. This does not
+automatically switch settings when you travel.
 
 ## Parity and exceptions
 

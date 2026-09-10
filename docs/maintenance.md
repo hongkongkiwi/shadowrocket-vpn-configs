@@ -6,10 +6,15 @@ order. Keep shared dependencies outside provider AI selectors and GitHub in
 Developer Services, apart from the dedicated Copilot endpoints. The provenance
 and scope of inline rules are recorded in [rule-sources.md](rule-sources.md).
 
+`default.conf` is a separate hand-maintained minimal profile. Keep only the
+local-access settings, UDP fallback rejection, its self-update URL, and `FINAL,PROXY`; it has no
+service/country rules, remote lists, custom DNS, blocking, or policy groups.
+The validator checks this boundary. Do not generate it from the service policy.
+
 Generate `mainland-china.conf` and `hong-kong.conf` from that source and the DNS
 modules with `ruby scripts/generate_profiles.rb`. Commit the generated files
 together with source changes. The validator rejects missing or stale profiles.
-Hong Kong changes ordinary selectors to `DIRECT`, retaining US defaults only for
+Hong Kong changes ordinary selectors to `DIRECT`, retaining `PROXY` defaults only for
 AI and international TikTok. It replaces three broad remote lists with
 `rules/hong-kong-proxy.list`; all other routing rules stay shared. Each
 profile has its own DNS settings and self-update URL. The legacy URL remains
