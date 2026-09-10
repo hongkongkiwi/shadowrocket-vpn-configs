@@ -27,13 +27,44 @@ check.call(root, %w[adblock-lite adblock-aggressive], "requires adblock-core")
 end
 check.call(root, %w[missing-module], "unknown selected module")
 
+# Check the published behavior independently of the profile generator.
+proxied_in_hk = [
+  "📱 TikTok", "🤖 OpenAI", "🧠 Claude", "💎 Google AI", "🧑‍💻 GitHub Copilot",
+  "🪟 Microsoft Copilot", "🖱️ Cursor", "🔍 Perplexity", "𝕏 xAI / Grok",
+  "🤗 Hugging Face", "🏄 Windsurf", "🧠 JetBrains AI"
+]
+base = File.read(File.join(root, "shadowrocket.conf"))
+%w[hong-kong mainland-china].each do |location|
+  profile = File.read(File.join(root, "#{location}.conf"))
+  actual_rules = profile.split("[Rule]\n", 2).last
+  expected_rules = base.split("[Rule]\n", 2).last
+  if location == "hong-kong"
+    actual_rules = actual_rules.delete_prefix("#{File.read(File.join(root, 'rules/hong-kong-proxy.list'))}\n")
+    expected_rules = expected_rules.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join
+  end
+  abort "#{location}: unrelated routing rules changed" unless actual_rules == expected_rules
+  selectors = profile.lines.grep(/ = select,/)
+  abort "#{location}: missing selectors" unless selectors.size == base.lines.grep(/ = select,/).size
+  selectors.each do |line|
+    name, choices = line.strip.split(" = ", 2)
+    expected = proxied_in_hk.include?(name) ? "🇺🇸 US Node" : location == "hong-kong" ? "DIRECT" : "PROXY"
+    abort "#{location}: wrong default for #{name}" unless choices.split(",")[1] == expected && choices.split(",").include?("select=0")
+  end
+  resolver = location == "hong-kong" ? "https://cloudflare-dns.com/dns-query" : "https://dns.alidns.com/dns-query#no-h3"
+  abort "#{location}: wrong DNS" unless profile.lines.grep(/^dns-server = /).map(&:strip) == ["dns-server = #{resolver}"]
+  abort "#{location}: wrong update URL" unless profile.lines.grep(/^update-url = /).map(&:strip) == ["update-url = https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/#{location}.conf"]
+  checks += 1
+end
+
 # Mutate an isolated copy so these checks can't alter installed/user configs.
 Dir.mktmpdir("shadowrocket-validator-") do |scratch|
-  %w[scripts modules exports docs README.md shadowrocket.conf].each do |entry|
+  %w[scripts modules exports docs rules README.md shadowrocket.conf mainland-china.conf hong-kong.conf].each do |entry|
     FileUtils.cp_r(File.join(root, entry), scratch)
   end
   {
-    "shadowrocket.conf" => ["DOMAIN-SUFFIX,openai.com,🤖 OpenAI", "# DOMAIN-SUFFIX,openai.com,🤖 OpenAI", "missing"],
+    "shadowrocket.conf" => ["DOMAIN-SUFFIX,openai.com,🤖 OpenAI", "# DOMAIN-SUFFIX,openai.com,🤖 OpenAI", 'missing "DOMAIN-SUFFIX,openai.com,🤖 OpenAI"'],
+    "hong-kong.conf" => ["💻 Developer Services = select,DIRECT,PROXY,", "💻 Developer Services = select,PROXY,DIRECT,", "missing or stale"],
+    "mainland-china.conf" => ["main/mainland-china.conf", "main/hong-kong.conf", "missing or stale"],
     "exports/clash/config.yaml" => ['proxies: [🇺🇸 US Node, PROXY,', 'proxies: [PROXY, 🇺🇸 US Node,', "must default to the US group"],
     "exports/surge/Surge.conf" => ['🤖 OpenAI = select, 🇺🇸 US Node, PROXY,', '🤖 OpenAI = select, PROXY, 🇺🇸 US Node,', "must default to the US group"],
     "exports/quantumultx/QuantumultX.conf" => ['static=🤖 OpenAI, 🇺🇸 US Node, proxy,', 'static=🤖 OpenAI, proxy, 🇺🇸 US Node,', "must default to the US group"]
@@ -68,6 +99,30 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
   File.write(filename, original.sub("#{rule}\n", "").sub("FINAL,", "#{rule}\nFINAL,"))
   check.call(scratch, [], "must precede broad service rules")
   File.write(filename, original)
+
+  # Regenerate after mutations so stale-output detection cannot mask routing defects.
+  narrow_file = File.join(scratch, "rules/hong-kong-proxy.list")
+  narrow_original = File.read(narrow_file)
+  {
+    "DOMAIN-SUFFIX,bytedance.com,📱 TikTok" => "routing case www.bytedance.com",
+    "DOMAIN-SUFFIX,apis.google.com,💎 Google AI" => "routing case apis.google.com",
+    "DOMAIN,cdn.usefathom.com,🧠 Claude" => "routing case cdn.usefathom.com",
+    "IP-ASN,138699,📱 TikTok" => "proxy routes must use narrow domain rules",
+    "DOMAIN-KEYWORD,colab,💎 Google AI" => "proxy routes must use narrow domain rules"
+  }.each do |rule, error|
+    File.write(narrow_file, "#{narrow_original}#{rule}\n")
+    output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
+    abort "Profile regeneration failed: #{output}" unless status.success?
+    check.call(scratch, [], error)
+  end
+  File.write(narrow_file, narrow_original)
+  output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
+  abort "Profile regeneration failed: #{output}" unless status.success?
+  check.call(scratch, [])
+  generated = %w[hong-kong.conf mainland-china.conf].to_h { |name| [name, File.read(File.join(scratch, name))] }
+  output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
+  abort "Profile generation is not deterministic: #{output}" unless status.success? && generated.all? { |name, body| File.read(File.join(scratch, name)) == body }
+  checks += 1
 
   before, after = %w[old.list new.list].map { |name| File.join(scratch, name) }
   File.write(before, "DOMAIN,old.example\n")

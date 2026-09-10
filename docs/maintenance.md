@@ -6,9 +6,19 @@ order. Keep shared dependencies outside provider AI selectors and GitHub in
 Developer Services, apart from the dedicated Copilot endpoints. The provenance
 and scope of inline rules are recorded in [rule-sources.md](rule-sources.md).
 
+Generate `mainland-china.conf` and `hong-kong.conf` from that source and the DNS
+modules with `ruby scripts/generate_profiles.rb`. Commit the generated files
+together with source changes. The validator rejects missing or stale profiles.
+Hong Kong changes ordinary selectors to `DIRECT`, retaining US defaults only for
+AI and international TikTok. It replaces three broad remote lists with
+`rules/hong-kong-proxy.list`; all other routing rules stay shared. Each
+profile has its own DNS settings and self-update URL. The legacy URL remains
+available. The other client exports have not been split by location.
+
 Run:
 
 ```sh
+ruby scripts/generate_profiles.rb
 ruby scripts/validate_configs.rb
 ruby scripts/test_config_validation.rb
 ruby scripts/validate_soul_module.rb
