@@ -1,4 +1,4 @@
-#!name = Andy Apple — Push Notifications
+#!name = Apple — Push Notifications
 #!desc = Gives APNs its own route. DIRECT is the safest default; select a stable proxy only when the local network blocks push traffic.
 #!category = Apple
 

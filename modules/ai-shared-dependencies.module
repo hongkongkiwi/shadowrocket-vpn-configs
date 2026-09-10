@@ -1,4 +1,4 @@
-#!name = Andy AI — Shared Dependencies
+#!name = AI — Shared Dependencies
 #!desc = Routes shared login, payment, telemetry, and CDN services with OpenAI. Enable only if sign-in or billing fails; it also affects unrelated apps using those providers.
 #!category = Compatibility
 

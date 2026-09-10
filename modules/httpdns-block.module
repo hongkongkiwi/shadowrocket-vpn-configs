@@ -1,4 +1,4 @@
-#!name = Andy Privacy — Block HTTPDNS
+#!name = Privacy — Block HTTPDNS
 #!desc = Blocks apps' built-in HTTPDNS (Weibo/WeChat/Baidu/NetEase/JD etc.) that bypasses system DNS and your hijack-dns setting. Complements hijack-dns = *:53 (port 53) by catching HTTPDNS over port 443.
 #!category = Privacy
 

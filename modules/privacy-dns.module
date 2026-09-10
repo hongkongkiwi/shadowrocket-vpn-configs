@@ -1,4 +1,4 @@
-#!name = Andy Privacy — Encrypted DNS
+#!name = Privacy — Encrypted DNS
 #!desc = Uses Cloudflare with Quad9 fallback over HTTPS and intercepts port 53. Intended for Hong Kong and travel outside mainland China.
 #!category = Privacy
 

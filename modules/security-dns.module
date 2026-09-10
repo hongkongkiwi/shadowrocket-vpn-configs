@@ -1,4 +1,4 @@
-#!name = Andy Privacy — Security DNS
+#!name = Privacy — Security DNS
 #!desc = Uses Cloudflare Security DNS as primary and Quad9 as fallback over HTTPS, with DNS interception and no system fallback. Use outside mainland China where these resolvers are reachable.
 #!category = Privacy
 

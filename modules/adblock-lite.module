@@ -1,4 +1,4 @@
-#!name = Andy Adblock — Lite
+#!name = Adblock — Lite
 #!desc = Conservative adblock (~38k domains). Use instead of Core on older devices, or if Core/Aggressive breaks something. Off = full config rules only.
 #!category = Adblock
 

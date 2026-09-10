@@ -1,4 +1,4 @@
-#!name = Andy Apple — App Store China CDN
+#!name = Apple — App Store China CDN
 #!desc = Maps one App Store download host to a Kingsoft CDN. Mainland-only workaround; disable first when App Store downloads or sign-in act strangely.
 #!category = Apple
 
