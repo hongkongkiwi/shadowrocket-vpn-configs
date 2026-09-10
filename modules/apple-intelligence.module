@@ -3,7 +3,7 @@
 #!category = Apple
 
 [Proxy Group]
-🧠 Apple PCC = select,🇺🇸 US Node,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,DIRECT,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+🧠 Apple PCC = select,PROXY,🇺🇸 US Node,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,DIRECT,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
 
 [Rule]
 DOMAIN,apple-relay.apple.com,🧠 Apple PCC

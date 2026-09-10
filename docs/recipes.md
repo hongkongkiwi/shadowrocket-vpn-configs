@@ -68,7 +68,7 @@ Emby hosts in private overrides until there is a tested rule worth sharing.
 
 Use [`hong-kong.conf`](../hong-kong.conf) while in Hong Kong. It includes privacy
 DNS and defaults every service and unmatched traffic to `DIRECT` except AI and
-international TikTok, which retain the US proxy default. Leave DNS modules off.
+international TikTok, which use your selected `PROXY`. Leave DNS modules off.
 For this profile, start with the optional modules below. Ad blocking is optional,
 and the Apple Intelligence module is only needed for Apple's AI cloud endpoints.
 
@@ -119,8 +119,8 @@ For the legacy `shadowrocket.conf`, add `dns-mainland-china` to that recipe.
 
 Start Apple Account and Apple Services on `DIRECT`. If that fails, hold one
 Hong Kong node fixed and use `PROXY` for both throughout sign-in. Add
-`apple-intelligence` above Services only when needed and select a working US
-node. Keep `privacy-dns`, `security-dns`, and `back-to-cn` off. Use `china-app-tun-compat` only
+`apple-intelligence` above Services only when needed and select a proxy that works
+for the service. Keep `privacy-dns`, `security-dns`, and `back-to-cn` off. Use `china-app-tun-compat` only
 for a listed mainland app that fails through the ordinary capture path.
 
 ## Apple Intelligence and PCC
@@ -128,7 +128,7 @@ for a listed mainland app that fails through the ordinary capture path.
 Add `apple-siri-search` and `apple-intelligence` above `apple-services`.
 The first covers Siri, dictation, and search and defaults to Direct. The second
 covers Apple Intelligence Extensions plus Private Cloud Compute and starts with
-the US selector. Keep one route fixed during account or device setup.
+your selected `PROXY`. Keep one route fixed during account or device setup.
 Certificate validation stays direct.
 
 A regional `url-test` group can switch its chosen node. For a fixed session,
@@ -140,8 +140,8 @@ requirements still apply; check [Apple's requirements](https://support.apple.com
 
 The base and all exports separate OpenAI, Claude, Google AI, GitHub Copilot,
 Microsoft Copilot, Cursor, Perplexity, xAI/Grok, Hugging Face, Windsurf, and
-JetBrains AI. New provider selectors start with the US group and allow manual
-PROXY, regional, and DIRECT choices. GitHub authentication and general API
+JetBrains AI. Provider selectors start with your selected `PROXY` and allow manual
+regional and DIRECT choices. No country group is required. GitHub authentication and general API
 traffic remain Developer Services; Microsoft account hosts remain Microsoft
 Services. Shared dependencies remain outside the provider routes.
 

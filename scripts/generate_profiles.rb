@@ -1,5 +1,11 @@
 #!/usr/bin/env ruby
 
+PROXIED_SERVICE_GROUPS = [
+  "📱 TikTok", "🤖 OpenAI", "🧠 Claude", "💎 Google AI", "🧑‍💻 GitHub Copilot",
+  "🪟 Microsoft Copilot", "🖱️ Cursor", "🔍 Perplexity", "𝕏 xAI / Grok",
+  "🤗 Hugging Face", "🏄 Windsurf", "🧠 JetBrains AI"
+].freeze
+
 # Keep routing rules in one source; publish two complete location profiles.
 def location_profiles(root)
   base = File.read(File.join(root, "shadowrocket.conf"))
@@ -16,10 +22,11 @@ def location_profiles(root)
     body.sub!(%r{(?<=update-url = )[^\n]+},
       "https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/#{slug}.conf")
     if slug == "hong-kong"
-      # AI and TikTok already start with the US group; all other selectors use PROXY.
-      body.gsub!(/^(.* = select,)(PROXY,[^\n]+)/) do
-        prefix, fields = Regexp.last_match(1), Regexp.last_match(2).split(",")
-        "#{prefix}DIRECT,#{fields.reject { |field| field == 'DIRECT' }.join(',')}"
+      # Choose by service, independently of the source profile's candidate order.
+      body.gsub!(/^(.*) = select,([^\n]+)/) do
+        name, fields = Regexp.last_match(1), Regexp.last_match(2).split(",")
+        default = PROXIED_SERVICE_GROUPS.include?(name) ? "PROXY" : "DIRECT"
+        "#{name} = select,#{default},#{fields.reject { |field| field == default }.join(',')}"
       end
       # The upstream lists include shared services and whole-network matches.
       body = body.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join

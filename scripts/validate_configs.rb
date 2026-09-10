@@ -135,6 +135,19 @@ check_groups(BASE, base_groups, errors)
 check_rule_refs(BASE, base_groups + BUILT_INS, errors)
 check_final(BASE, entries(BASE, "Rule"), errors)
 
+default_path = "default.conf"
+errors << "#{default_path}: expected only FINAL,PROXY" unless entries(default_path, "Rule") == ["FINAL,PROXY"]
+errors << "#{default_path}: must not define proxy groups" unless groups(default_path).empty?
+expected_default_general = [
+  "bypass-system = true",
+  "udp-policy-not-supported-behaviour = REJECT",
+  "skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, captive.apple.com",
+  "tun-excluded-routes = 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, ::1/128, fc00::/7, fe80::/10",
+  "update-url = https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/default.conf"
+]
+errors << "#{default_path}: unexpected General settings" unless entries(default_path, "General") == expected_default_general
+errors << "#{default_path}: unexpected sections" unless lines(default_path).map(&:strip).grep(/^\[/) == ["[General]", "[Rule]"]
+
 location_profiles(ROOT).each do |path, expected|
   unless File.file?(File.join(ROOT, path)) && File.read(File.join(ROOT, path)) == expected
     errors << "#{path}: missing or stale; run ruby scripts/generate_profiles.rb"
@@ -145,10 +158,10 @@ location_profiles(ROOT).each do |path, expected|
   check_final(path, entries(path, "Rule"), errors)
   next unless path == "hong-kong.conf"
 
-  proxy_groups = ["📱 TikTok", "🤖 OpenAI", "🧠 Claude", "💎 Google AI"] + NEW_AI_CASES.values
+  proxy_groups = PROXIED_SERVICE_GROUPS
   entries(path, "Proxy Group").grep(/= select,/).each do |line|
     name = line.split("=", 2).first.strip
-    expected_default = proxy_groups.include?(name) ? "🇺🇸 US Node" : "DIRECT"
+    expected_default = proxy_groups.include?(name) ? "PROXY" : "DIRECT"
     errors << "#{path}: wrong default for #{name}" unless group_members(line).first == expected_default && line.split(",").include?("select=0")
   end
   rules = entries(path, "Rule")
@@ -216,6 +229,8 @@ end
 
 surge_groups = groups(SURGE)
 check_groups(SURGE, surge_groups, errors)
+surge_proxy = entries(SURGE, "Proxy Group").find { |line| line.start_with?("PROXY =") }
+errors << "#{SURGE}: unconfigured PROXY must reject traffic" unless surge_proxy == "PROXY = select, REJECT"
 check_rule_refs(SURGE, surge_groups + BUILT_INS, errors)
 check_final(SURGE, entries(SURGE, "Rule"), errors)
 entries(SURGE, "Proxy Group").grep(/= url-test,/).each do |line|
@@ -263,23 +278,26 @@ end
 check_rule_refs(QX, qx_policies + BUILT_INS, errors, "filter_local")
 check_final(QX, entries(QX, "filter_local"), errors)
 
-(["🤖 OpenAI", "🧠 Claude", "💎 Google AI"] + NEW_AI_CASES.values.uniq).each do |name|
-  [BASE, SURGE, QX, CLASH].each do |path|
+(PROXIED_SERVICE_GROUPS + ["🧠 Apple PCC"]).each do |name|
+  source = name == "🧠 Apple PCC" ? "modules/apple-intelligence.module" : BASE
+  [source, SURGE, QX, CLASH].each do |path|
     first = if path == CLASH
               clash.fetch("proxy-groups").find { |group| group["name"] == name }&.fetch("proxies", [])&.first
             else
               group_line = entries(path, path == QX ? "policy" : "Proxy Group").find do |line|
-                path == QX ? line.start_with?("static=#{name},") : line.split("=", 2).first.strip == name
+                qx_name = name == "📱 TikTok" ? "TikTok" : name
+                path == QX ? line.start_with?("static=#{qx_name},") : line.split("=", 2).first.strip == name
               end
               group_line && group_members(group_line).first
             end
-    errors << "#{path}: #{name} must default to the US group" unless first == "🇺🇸 US Node"
+    errors << "#{path}: #{name} must default to the selected proxy" unless first&.casecmp("PROXY")&.zero?
   end
 end
 
 # Manual DIRECT choices never change the existing first/default candidate.
 [BASE, SURGE].each do |path|
   entries(path, "Proxy Group").grep(/= select,/).each do |line|
+    next if path == SURGE && line.start_with?("PROXY =") # Unconfigured placeholder must reject.
     errors << "#{path}: selector lacks DIRECT: #{line.split('=', 2).first}" unless group_members(line).include?("DIRECT")
   end
 end

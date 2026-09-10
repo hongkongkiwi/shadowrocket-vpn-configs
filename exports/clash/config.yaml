@@ -64,7 +64,7 @@ proxy-groups:
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "📱 TikTok"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🖥️ Microsoft Services"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
@@ -79,37 +79,37 @@ proxy-groups:
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🤖 OpenAI"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🧠 Claude"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "💎 Google AI"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🧑‍💻 GitHub Copilot"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🪟 Microsoft Copilot"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🖱️ Cursor"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🔍 Perplexity"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "𝕏 xAI / Grok"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🤗 Hugging Face"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🏄 Windsurf"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🧠 JetBrains AI"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "💻 Developer Services"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
@@ -157,7 +157,7 @@ proxy-groups:
     proxies: [DIRECT, 🇺🇸 US Node, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🧠 Apple PCC"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇺🇸 US Node, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🔔 Apple Push"
     type: select
     proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]

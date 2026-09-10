@@ -47,7 +47,7 @@ base = File.read(File.join(root, "shadowrocket.conf"))
   abort "#{location}: missing selectors" unless selectors.size == base.lines.grep(/ = select,/).size
   selectors.each do |line|
     name, choices = line.strip.split(" = ", 2)
-    expected = proxied_in_hk.include?(name) ? "🇺🇸 US Node" : location == "hong-kong" ? "DIRECT" : "PROXY"
+    expected = location == "hong-kong" && !proxied_in_hk.include?(name) ? "DIRECT" : "PROXY"
     abort "#{location}: wrong default for #{name}" unless choices.split(",")[1] == expected && choices.split(",").include?("select=0")
   end
   expected_dns = {
@@ -64,16 +64,17 @@ end
 
 # Mutate an isolated copy so these checks can't alter installed/user configs.
 Dir.mktmpdir("shadowrocket-validator-") do |scratch|
-  %w[scripts modules exports docs rules README.md shadowrocket.conf mainland-china.conf hong-kong.conf].each do |entry|
+  %w[scripts modules exports docs rules README.md default.conf shadowrocket.conf mainland-china.conf hong-kong.conf].each do |entry|
     FileUtils.cp_r(File.join(root, entry), scratch)
   end
   {
+    "default.conf" => ["FINAL,PROXY", "DOMAIN-SUFFIX,example.com,DIRECT\nFINAL,PROXY", "expected only FINAL,PROXY"],
     "shadowrocket.conf" => ["DOMAIN-SUFFIX,openai.com,🤖 OpenAI", "# DOMAIN-SUFFIX,openai.com,🤖 OpenAI", 'missing "DOMAIN-SUFFIX,openai.com,🤖 OpenAI"'],
     "hong-kong.conf" => ["💻 Developer Services = select,DIRECT,PROXY,", "💻 Developer Services = select,PROXY,DIRECT,", "missing or stale"],
     "mainland-china.conf" => ["main/mainland-china.conf", "main/hong-kong.conf", "missing or stale"],
-    "exports/clash/config.yaml" => ['proxies: [🇺🇸 US Node, PROXY,', 'proxies: [PROXY, 🇺🇸 US Node,', "must default to the US group"],
-    "exports/surge/Surge.conf" => ['🤖 OpenAI = select, 🇺🇸 US Node, PROXY,', '🤖 OpenAI = select, PROXY, 🇺🇸 US Node,', "must default to the US group"],
-    "exports/quantumultx/QuantumultX.conf" => ['static=🤖 OpenAI, 🇺🇸 US Node, proxy,', 'static=🤖 OpenAI, proxy, 🇺🇸 US Node,', "must default to the US group"]
+    "exports/clash/config.yaml" => ['proxies: [PROXY, 🇺🇸 US Node,', 'proxies: [🇺🇸 US Node, PROXY,', "must default to the selected proxy"],
+    "exports/surge/Surge.conf" => ['🤖 OpenAI = select, PROXY, 🇺🇸 US Node,', '🤖 OpenAI = select, 🇺🇸 US Node, PROXY,', "must default to the selected proxy"],
+    "exports/quantumultx/QuantumultX.conf" => ['static=🤖 OpenAI, proxy, 🇺🇸 US Node,', 'static=🤖 OpenAI, 🇺🇸 US Node, proxy,', "must default to the selected proxy"]
   }.each do |relative, (before, after, error)|
     filename = File.join(scratch, relative)
     original = File.read(filename)
@@ -86,6 +87,9 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
   end
 
   {
+    "default.conf" => ["[General]", "[General]\ndns-server = 1.1.1.1", "unexpected General settings"],
+    "exports/surge/Surge.conf" => ["PROXY = select, REJECT", "PROXY = select, DIRECT", "unconfigured PROXY must reject traffic"],
+    "modules/apple-intelligence.module" => ["🧠 Apple PCC = select,PROXY,🇺🇸 US Node,", "🧠 Apple PCC = select,🇺🇸 US Node,PROXY,", "must default to the selected proxy"],
     "modules/security-dns.module" => ["https://security.cloudflare-dns.com/dns-query", "https://cloudflare-dns.com/dns-query", "must use only the reviewed security setting"],
     "modules/bulk-downloads.module" => ["DOMAIN-SUFFIX,steamcontent.com", "DOMAIN-SUFFIX,steamcommunity.com", "routing case"],
     "modules/network-diagnostics.module" => ["DOMAIN-SUFFIX,speedtest.net", "DOMAIN-SUFFIX,fast.com", "routing case"],

@@ -14,14 +14,28 @@ certificates, or MITM private keys.
 3. Import and order modules using [`docs/recipes.md`](docs/recipes.md).
 4. Run `ruby scripts/validate_configs.rb` before sharing a profile.
 
-Disable DNS modules when using them: each profile includes its own DNS settings.
+For a plain VPN profile, import [Default](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/default.conf)
+([`default.conf`](default.conf)). Its only routing rule is `FINAL,PROXY`: traffic
+uses your selected proxy, with local-network ranges excluded from the VPN tunnel.
+It has no service or country rules, remote rule lists, custom DNS, blocking,
+or policy groups. Disable optional modules when using it; modules can add
+rules or settings, and some depend on groups that this profile does not define.
+If your selected proxy cannot forward UDP, the default profile rejects that
+traffic instead of allowing a direct fallback.
+
+Disable DNS modules when using the location profiles: each includes its own DNS settings.
 Modules and saved selector choices can override these defaults. For the Hong Kong
 AI/TikTok-only setup, leave `private-ip-block`, shared AI dependencies, bulk
 downloads, return-to-China, Soul, and regional streaming overrides off.
 Check selector choices after switching, particularly on an existing installation.
-The old `shadowrocket.conf` URL remains available with its existing behavior;
-it is the shared source used to generate both location profiles. Other client
-exports retain their existing defaults and have not been split by location.
+AI and international TikTok default to `PROXY`, which uses the server you select
+in Shadowrocket. No US node is required. Choose an exit that works for the
+service you are using; regional groups are optional manual choices. After
+refreshing an existing installation, select `PROXY` in AI and TikTok groups to
+replace any saved regional selection.
+The old `shadowrocket.conf` URL remains available as the shared source used to
+generate both location profiles. It and the other client exports also default
+AI and TikTok to the selected proxy. The exports have not been split by location.
 Hong Kong uses reviewed inline Claude, Google AI, and international TikTok rules
 to avoid proxying unrelated services in their upstream lists. Shared CDN and
 login hosts stay direct; add a narrow local override only for an observed failure.
