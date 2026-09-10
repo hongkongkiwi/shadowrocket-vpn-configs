@@ -1,4 +1,4 @@
-#!name = Andy Compatibility — Real IP
+#!name = Compatibility — Real IP
 #!desc = Returns real DNS answers for connectivity checks, game consoles, and carrier login endpoints that can fail with fake IP. Enable only when needed.
 #!category = Compatibility
 

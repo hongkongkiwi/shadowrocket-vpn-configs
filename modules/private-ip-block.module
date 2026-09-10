@@ -1,4 +1,4 @@
-#!name = Andy Privacy — Proxy Private DNS Answers
+#!name = Privacy — Proxy Private DNS Answers
 #!desc = Treats private DNS answers as hijacking and forces those domains through the proxy. Toggle off for split DNS or private services.
 #!category = Privacy
 

@@ -1,4 +1,4 @@
-#!name = Andy Streaming — HK TW JP
+#!name = Streaming — HK TW JP
 #!desc = Routes reviewed service-owned streaming domains by region. Each selector starts with its matching regional node and also permits PROXY, DIRECT, and every regional node.
 #!category = Streaming
 

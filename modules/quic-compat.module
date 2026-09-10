@@ -1,4 +1,4 @@
-#!name = Andy Compatibility — Disable Proxied QUIC
+#!name = Compatibility — Disable Proxied QUIC
 #!desc = Blocks QUIC on proxied traffic so clients retry over TCP. Enable only when UDP proxying is unreliable.
 #!category = Compatibility
 

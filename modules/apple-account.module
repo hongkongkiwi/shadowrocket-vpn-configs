@@ -1,4 +1,4 @@
-#!name = Andy Apple — Account
+#!name = Apple — Account
 #!desc = Routes Apple's account authentication hosts through one manually selected path. Keep the selection unchanged until sign-in finishes.
 #!category = Apple
 

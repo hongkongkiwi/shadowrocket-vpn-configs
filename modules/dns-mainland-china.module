@@ -1,4 +1,4 @@
-#!name = Andy DNS — Mainland China
+#!name = DNS — Mainland China
 #!desc = Uses AliDNS with DNSPod fallback over HTTPS. HTTP/3 is disabled for steadier operation on filtered mainland networks.
 #!category = DNS
 

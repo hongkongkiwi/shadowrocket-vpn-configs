@@ -1,4 +1,4 @@
-#!name = Andy Apple — Certificate Validation
+#!name = Apple — Certificate Validation
 #!desc = Sends Apple and DigiCert certificate status checks direct. Apple lists several of these hosts as not supporting proxies.
 #!category = Apple
 

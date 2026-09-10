@@ -1,4 +1,4 @@
-#!name = Andy Network — IPv6 Preferred
+#!name = Network — IPv6 Preferred
 #!desc = Enables IPv6 and prefers IPv6 DNS answers. Use instead of the basic IPv6 module after testing the full path.
 #!category = Network
 

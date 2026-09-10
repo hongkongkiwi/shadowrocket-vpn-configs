@@ -1,4 +1,4 @@
-#!name = Andy Network — Diagnostics
+#!name = Network — Diagnostics
 #!desc = Routes narrow Ookla speed test hosts through a selectable policy, defaulting to PROXY. Third-party test server domains are not all captured, so check the chosen server hostname. Fast.com remains covered by the existing Netflix route.
 #!category = Diagnostics
 

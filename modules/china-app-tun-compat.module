@@ -1,4 +1,4 @@
-#!name = Andy China — App TUN Compatibility
+#!name = China — App TUN Compatibility
 #!desc = Sends selected mainland bank, carrier, travel, and utility apps through Shadowrocket's TUN interface. Enable only if one of these apps fails.
 #!category = Compatibility
 

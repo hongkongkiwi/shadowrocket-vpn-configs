@@ -1,4 +1,4 @@
-#!name = Andy Network — IPv6
+#!name = Network — IPv6
 #!desc = Enables IPv6 without preferring it. Use only when the local network and every selected proxy node support IPv6.
 #!category = Network
 

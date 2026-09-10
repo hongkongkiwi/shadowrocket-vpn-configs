@@ -1,4 +1,4 @@
-#!name = Andy Downloads — Games and Software
+#!name = Downloads — Games and Software
 #!desc = Routes selected game, developer, CDN, and Windows Update download hosts. The selector defaults to PROXY; Apple downloads stay in the Apple modules.
 #!category = Downloads
 
