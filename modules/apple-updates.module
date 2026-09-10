@@ -1,0 +1,18 @@
+#!name = Andy Apple — Software Updates
+#!desc = Gives Apple operating-system and component updates their own route. DIRECT avoids sending large downloads through a paid proxy.
+#!category = Apple
+
+[Proxy Group]
+🍏 Apple Updates = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+DOMAIN,gateway.icloud.com,🍏 Apple Updates
+DOMAIN,gdmf.apple.com,🍏 Apple Updates
+DOMAIN,swscan.apple.com,🍏 Apple Updates
+DOMAIN,appldnld.apple.com,🍏 Apple Updates
+DOMAIN,mesu.apple.com,🍏 Apple Updates
+DOMAIN,swcdn.apple.com,🍏 Apple Updates
+DOMAIN,swdist.apple.com,🍏 Apple Updates
+DOMAIN,swdownload.apple.com,🍏 Apple Updates
+DOMAIN-SUFFIX,updates-http.cdn-apple.com,🍏 Apple Updates
+DOMAIN-SUFFIX,updates.cdn-apple.com,🍏 Apple Updates

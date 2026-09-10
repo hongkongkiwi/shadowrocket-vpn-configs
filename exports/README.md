@@ -62,7 +62,12 @@ Current check result:
 - Rule targets match declared policy-group names exactly.
 - The dead Apple Push source is gone. The remaining Apple lists already cover
   APNs domains and Apple's `17.0.0.0/8` range.
-- Exact Apple direct rules run before the broad Apple lists.
+- Apple Account has its own manual policy. Certificate checks that Apple marks
+  as unsuitable for proxies go direct.
+- Apple service exceptions use the selectable Apple policy instead of mixing
+  hard-coded direct and proxy paths.
+- The Kingsoft App Store host alias is absent because exports cannot toggle it
+  independently.
 - With the untouched `DIRECT` placeholder, every group that selects `PROXY`
   connects directly.
 - The Taiwan selector no longer matches the mainland China flag.
@@ -85,6 +90,9 @@ Current check result:
   hyphenated parameter names.
 - Advertising and Privacy force `reject`. Lan and ChinaMax force `direct`.
 - OneDrive and Prime Video now have policies and remote filters.
+- Apple Account has a separate policy and explicit authentication rules.
+- Apple certificate checks go direct; the other explicit Apple rules use the
+  Apple policy.
 - DoH is enabled. Quantumult X ignores the ordinary `server` entries for normal
   queries while an unscoped `doh-server` is active.
 - Excluded routes have explicit CIDR masks.

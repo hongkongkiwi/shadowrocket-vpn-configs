@@ -115,7 +115,10 @@ end
 errors << "#{qx_path}: old url-test policy syntax remains" if qx.any? { |line| line.start_with?("url-test=") }
 errors << "#{qx_path}: OneDrive policy is missing" unless qx_policies.include?("OneDrive")
 errors << "#{qx_path}: PrimeVideo policy is missing" unless qx_policies.include?("PrimeVideo")
+errors << "#{qx_path}: Apple Account policy is missing" unless qx_policies.include?("Apple Account")
 errors << "#{qx_path}: DoH is not enabled" unless qx.any? { |line| line.start_with?("doh-server = https://") }
+errors << "#{qx_path}: Apple Account authentication rule is missing" unless qx.include?("host, account.apple.com, Apple Account")
+errors << "#{qx_path}: Apple certificate checks must stay direct" unless qx.include?("host, ocsp.digicert.com, direct")
 
 all_config = (["shadowrocket.conf"] + Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| path.delete_prefix("#{ROOT}/") } + %w[exports/clash/config.yaml exports/surge/Surge.conf exports/quantumultx/QuantumultX.conf]).to_h { |path| [path, File.read(File.join(ROOT, path))] }
 banned = ["Apple-Push.list", "/Advertising/Privacy.list", "/Forbidden/Forbidden.list", "sr_ad_only.conf", "carrnot/china-ip-list", "🇨🇳 Taiwan Node"]
@@ -133,8 +136,8 @@ errors << "shadowrocket.conf: QUIC blocking must stay in the base profile" unles
 
 privacy_dns = all_config.fetch("modules/privacy-dns.module")
 privacy_dns_settings = {
-  "dns-server" => "https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query",
-  "fallback-dns-server" => "https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query",
+  "dns-server" => "https://cloudflare-dns.com/dns-query",
+  "fallback-dns-server" => "https://dns.quad9.net/dns-query",
   "dns-direct-system" => "false",
   "dns-direct-fallback-proxy" => "false",
   "hijack-dns" => "*:53"
@@ -142,6 +145,18 @@ privacy_dns_settings = {
 privacy_dns_settings.each do |setting, value|
   errors << "modules/privacy-dns.module: invalid #{setting}" unless privacy_dns.lines.map(&:strip).include?("#{setting} = #{value}")
   errors << "shadowrocket.conf: #{setting} must stay in the privacy DNS module" if main.match?(/^#{Regexp.escape(setting)}\s*=/)
+end
+
+china_dns = all_config.fetch("modules/dns-mainland-china.module")
+china_dns_settings = {
+  "dns-server" => "https://dns.alidns.com/dns-query#no-h3",
+  "fallback-dns-server" => "https://doh.pub/dns-query#no-h3",
+  "dns-direct-system" => "false",
+  "dns-direct-fallback-proxy" => "false",
+  "hijack-dns" => "*:53"
+}
+china_dns_settings.each do |setting, value|
+  errors << "modules/dns-mainland-china.module: invalid #{setting}" unless china_dns.lines.map(&:strip).include?("#{setting} = #{value}")
 end
 
 private_ip = all_config.fetch("modules/private-ip-block.module")
@@ -154,21 +169,69 @@ errors << "shadowrocket.conf: always-real-ip must stay in its module" if main.ma
 errors << "modules/real-ip-compat.module: Apple exceptions belong in the Apple module" if real_ip.match?(/apple|icloud|cp4\.cloudflare/i)
 
 apple = all_config.fetch("modules/apple-services.module")
-first_apple_list = apple.index("RULE-SET")
-%w[gateway.icloud.com swscan.apple.com].each do |domain|
-  errors << "modules/apple-services.module: #{domain} must precede broad Apple lists" unless apple.index(domain) < first_apple_list
+errors << "modules/apple-services.module: AppleCN source is missing" unless apple.include?("Rules/AppleCN.list")
+errors << "modules/apple-services.module: AppleServers source is missing" unless apple.include?("Rules/AppleServers.list")
+errors << "modules/apple-services.module: narrow Apple rules must stay in separate modules" if apple.match?(/^(?:DOMAIN(?:-SUFFIX|-KEYWORD|-WILDCARD)?|IP-CIDR6?),/)
+errors << "modules/apple-services.module: App Store host override must stay separate" if apple.include?("iosapps.itunes.apple.com =")
+
+apple_account = all_config.fetch("modules/apple-account.module")
+%w[account.apple.com appleid.cdn-apple.com idmsa.apple.com gsa.apple.com setup.icloud.com].each do |domain|
+  errors << "modules/apple-account.module: missing #{domain}" unless apple_account.include?(domain)
 end
-%w[gateway.icloud.com apple-relay.cloudflare.com cp4.cloudflare.com apple-relay.fastly-edge.com gdmf.apple.com swscan.apple.com sequoia.siri.apple.com sequoia.apple.com iosapps.itunes.apple.com].each do |domain|
+
+apple_certificates = all_config.fetch("modules/apple-certificate-validation.module")
+%w[certs.apple.com crl.apple.com crl3.digicert.com crl4.digicert.com ocsp.apple.com ocsp.digicert.cn ocsp.digicert.com ocsp2.apple.com valid.apple.com appattest.apple.com].each do |domain|
+  errors << "modules/apple-certificate-validation.module: missing #{domain}" unless apple_certificates.include?(domain)
+end
+errors << "modules/apple-certificate-validation.module: certificate checks must stay direct" if entries("modules/apple-certificate-validation.module", "Rule").any? { |line| rule_policy(line) != "DIRECT" }
+
+apple_push = all_config.fetch("modules/apple-push.module")
+%w[push.apple.com push-apple.com.akadns.net].each do |domain|
+  errors << "modules/apple-push.module: missing #{domain}" unless apple_push.include?(domain)
+end
+
+apple_updates = all_config.fetch("modules/apple-updates.module")
+%w[gateway.icloud.com gdmf.apple.com swscan.apple.com updates.cdn-apple.com].each do |domain|
+  errors << "modules/apple-updates.module: missing #{domain}" unless apple_updates.include?(domain)
+end
+
+apple_intelligence = all_config.fetch("modules/apple-intelligence.module")
+%w[guzzoni.apple.com smoot.apple.com apple-relay.cloudflare.com apple-relay.fastly-edge.com cp4.cloudflare.com apple-relay.apple.com].each do |domain|
+  errors << "modules/apple-intelligence.module: missing #{domain}" unless apple_intelligence.include?(domain)
+end
+
+apple_cdn = all_config.fetch("modules/apple-app-store-cdn.module")
+errors << "modules/apple-app-store-cdn.module: Kingsoft host override is missing" unless apple_cdn.include?("iosapps.itunes.apple.com = iosapps.itunes.apple.com.download.ks-cdn.com")
+
+%w[gateway.icloud.com apple-relay.cloudflare.com cp4.cloudflare.com apple-relay.fastly-edge.com gdmf.apple.com swscan.apple.com sequoia.siri.apple.com sequoia.apple.com iosapps.itunes.apple.com account.apple.com idmsa.apple.com gsa.apple.com].each do |domain|
   errors << "shadowrocket.conf: #{domain} must stay in the Apple module" if main.include?(domain)
+end
+
+china_compat = all_config.fetch("modules/china-app-tun-compat.module")
+errors << "modules/china-app-tun-compat.module: extended skip-proxy list is missing" unless china_compat.include?("passenger.t3go.cn") && china_compat.include?(expected_skip_proxy.delete_prefix("skip-proxy = "))
+
+ipv6 = all_config.fetch("modules/ipv6.module")
+errors << "modules/ipv6.module: IPv6 settings are incomplete" unless ipv6.include?("ipv6 = true") && ipv6.include?("prefer-ipv6 = true")
+
+readme = File.read(File.join(ROOT, "README.md"))
+Dir.glob(File.join(ROOT, "modules/*.module")).sort.each do |absolute|
+  filename = File.basename(absolute)
+  raw_url = "https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/#{filename}"
+  cdn_url = "https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/#{filename}"
+  errors << "README.md: missing raw URL for #{filename}" unless readme.include?(raw_url)
+  errors << "README.md: missing jsDelivr URL for #{filename}" unless readme.include?(cdn_url)
 end
 
 surge = all_config.fetch("exports/surge/Surge.conf")
 errors << "exports/surge/Surge.conf: Reject must precede broad AI rules" unless precedes?(surge, "Rules/Reject.list", "ai-proxy-rules")
-errors << "exports/surge/Surge.conf: Apple exceptions must precede broad Apple lists" unless precedes?(surge, "gateway.icloud.com,DIRECT", "rule/Surge/Apple/Apple.list")
+errors << "exports/surge/Surge.conf: Apple Account must precede broad Apple lists" unless precedes?(surge, "account.apple.com,🔐 Apple Account", "rule/Surge/Apple/Apple.list")
+errors << "exports/surge/Surge.conf: Apple service overrides must use the selectable group" unless surge.include?("gateway.icloud.com,🍎 Apple Services")
+errors << "exports/surge/Surge.conf: App Store CDN override must remain optional" if surge.include?("iosapps.itunes.apple.com =")
 
 clash_rules = clash.fetch("rules")
 errors << "exports/clash/config.yaml: ads must precede broad AI rules" unless clash_rules.index("RULE-SET,ads,REJECT") < clash_rules.index("RULE-SET,ai-vpsdance,🤖 AI")
-errors << "exports/clash/config.yaml: Apple exceptions must precede broad Apple lists" unless clash_rules.index("DOMAIN-SUFFIX,gateway.icloud.com,DIRECT") < clash_rules.index("RULE-SET,apple,🍎 Apple Services")
+errors << "exports/clash/config.yaml: Apple Account must precede broad Apple lists" unless clash_rules.index("DOMAIN,account.apple.com,🔐 Apple Account") < clash_rules.index("RULE-SET,apple,🍎 Apple Services")
+errors << "exports/clash/config.yaml: Apple service overrides must use the selectable group" unless clash_rules.include?("DOMAIN-SUFFIX,gateway.icloud.com,🍎 Apple Services")
 
 errors << "#{qx_path}: ad filters must precede AI filters" unless precedes?(all_config.fetch(qx_path), "/Advertising/Advertising.list", "/OpenAI/OpenAI.list")
 errors << "#{qx_path}: excluded routes need CIDR masks" unless all_config.fetch(qx_path).include?("excluded_routes = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.0/8, 100.64.0.0/10")

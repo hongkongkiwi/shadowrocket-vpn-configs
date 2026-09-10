@@ -1,0 +1,14 @@
+#!name = Andy Apple — Account
+#!desc = Routes Apple's account authentication hosts through one manually selected path. Keep the selection unchanged until sign-in finishes.
+#!category = Apple
+
+[Proxy Group]
+🔐 Apple Account = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+# Apple Support lists these hosts for Apple Account authentication.
+DOMAIN,account.apple.com,🔐 Apple Account
+DOMAIN,appleid.cdn-apple.com,🔐 Apple Account
+DOMAIN,idmsa.apple.com,🔐 Apple Account
+DOMAIN,gsa.apple.com,🔐 Apple Account
+DOMAIN,setup.icloud.com,🔐 Apple Account

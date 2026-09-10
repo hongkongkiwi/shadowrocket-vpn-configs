@@ -25,12 +25,21 @@ shadowrocket-vpn-configs/
 │   ├── adblock-core.module
 │   ├── adblock-lite.module
 │   ├── adblock-aggressive.module
+│   ├── apple-account.module
+│   ├── apple-app-store-cdn.module
+│   ├── apple-certificate-validation.module
+│   ├── apple-intelligence.module
+│   ├── apple-push.module
 │   ├── apple-services.module
+│   ├── apple-updates.module
+│   ├── back-to-cn.module
+│   ├── china-app-tun-compat.module
+│   ├── dns-mainland-china.module
 │   ├── httpdns-block.module
+│   ├── ipv6.module
 │   ├── privacy-dns.module
 │   ├── private-ip-block.module
-│   ├── real-ip-compat.module
-│   └── back-to-cn.module
+│   └── real-ip-compat.module
 ├── scripts/validate_configs.rb
 ├── .github/workflows/validate.yml
 └── exports/
@@ -44,8 +53,8 @@ shadowrocket-vpn-configs/
 
 The main Shadowrocket profile separates traffic into selectable groups for AI,
 international media, Microsoft, Google, Telegram, Twitter/X, TikTok, gaming,
-Emby, Spotify, and unmatched traffic. Apple routing lives in an optional module
-so it has one on/off switch.
+Emby, Spotify, and unmatched traffic. Apple account, certificate validation,
+push, update, Intelligence, CDN, and catch-all routing live in separate modules.
 
 Its rule order is intended to work like this:
 
@@ -54,10 +63,11 @@ Its rule order is intended to work like this:
 3. Chinese domains use ChinaMax and then `GEOIP,CN` for direct access.
 4. `FINAL` sends unmatched traffic to the fallback group.
 
-Traffic listed in `skip-proxy` bypasses the proxy engine. The base list now has
-only RFC1918 addresses, loopback, `.local`, and Apple's captive-portal check.
-Public carrier, bank, Baidu, and Crashlytics exceptions were removed because
-they skipped routing and rejection rules entirely.
+`skip-proxy` moves matching connections from Shadowrocket's local proxy
+interface to its TUN interface. It does not force `DIRECT`, and it has no effect
+when TUN already handles everything. The base list has only RFC1918 addresses,
+loopback, `.local`, and Apple's captive-portal check. The older mainland app
+list now lives in `china-app-tun-compat`.
 
 ## Shadowrocket setup
 
@@ -101,52 +111,83 @@ enable Shadowrocket's TUN or Force Routing mode.
 Local access differs by capture mode. Both TUN exclusions and `skip-proxy` now
 cover `192.168.0.0/16`, including Apple Virtualization's usual
 `192.168.64.0/24` network. Test Docker, printers, and NAS hosts on the capture
-mode you use. The App Store host alias is active only with the Apple module;
-disable that module if downloads fail or resolve to an unexpected CDN.
+mode you use. The App Store host alias has its own module and is off unless you
+import and enable it.
 
 ## Modules
 
 Shadowrocket uses one active profile, so optional behavior lives in modules.
 Import each module by URL, then order and toggle it under Config → Modules.
 
-| Module | Purpose | Suggested use | Audit state |
+| Module | What it changes | When to use it | Import |
 |---|---|---|---|
-| [`httpdns-block`](modules/httpdns-block.module) | Reject known app-owned HTTPDNS endpoints that bypass port 53 hijacking | Enable when apps ignore system DNS | Source URL returned 200 |
-| [`adblock-core`](modules/adblock-core.module) | Advertising plus privacy/tracker lists | Normal ad-blocking choice | Both native list URLs returned 200 |
-| [`adblock-lite`](modules/adblock-lite.module) | Smaller advertising list | Use instead of Core on slower devices | Source URL returned 200 |
-| [`adblock-aggressive`](modules/adblock-aggressive.module) | Larger China-focused anti-AD list | Add only after Core works without false positives | Native list URL returned 200 |
-| [`apple-services`](modules/apple-services.module) | Keep Apple services and software updates direct; apply the App Store CDN alias | Enable for the repository's preferred Apple routing; disable to use normal profile routing | Native Apple lists returned 200; exact direct rules run first |
-| [`privacy-dns`](modules/privacy-dns.module) | Use Cloudflare and AliDNS over HTTPS; intercept port 53 | Enable for encrypted DNS; disable on filtered networks and captive portals | No remote rule dependency |
-| [`private-ip-block`](modules/private-ip-block.module) | Force domains with private DNS answers through the proxy | Enable with Privacy DNS; disable for split DNS or private services | No remote dependency |
-| [`real-ip-compat`](modules/real-ip-compat.module) | Return real DNS answers for selected connectivity, gaming, and carrier hosts | Leave off unless an affected app or console fails under fake-IP DNS | No remote dependency |
-| [`back-to-cn`](modules/back-to-cn.module) | Route Chinese domains and IPs through a return-to-China node | Use only while outside mainland China | Domain and native IP-CIDR list URLs returned 200 |
+| [`adblock-core`](modules/adblock-core.module) | Advertising and tracker rules | Normal ad blocking | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-core.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/adblock-core.module) |
+| [`adblock-lite`](modules/adblock-lite.module) | Smaller advertising list | Older devices or fewer false positives | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-lite.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/adblock-lite.module) |
+| [`adblock-aggressive`](modules/adblock-aggressive.module) | Large mainland-focused anti-AD list | Add after Core works cleanly | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-aggressive.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/adblock-aggressive.module) |
+| [`apple-account`](modules/apple-account.module) | Apple Account login hosts and a manual policy | Use for sign-in; keep one route selected until it finishes | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-account.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-account.module) |
+| [`apple-app-store-cdn`](modules/apple-app-store-cdn.module) | Kingsoft host alias for one App Store download host | Mainland download workaround only | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-app-store-cdn.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-app-store-cdn.module) |
+| [`apple-certificate-validation`](modules/apple-certificate-validation.module) | Direct Apple and DigiCert certificate checks | Enable for Apple sign-in and service use | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-certificate-validation.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-certificate-validation.module) |
+| [`apple-intelligence`](modules/apple-intelligence.module) | Siri, Apple Intelligence, and Private Cloud Compute routing | Use a supported-region node when needed | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-intelligence.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-intelligence.module) |
+| [`apple-push`](modules/apple-push.module) | APNs routing | Keep direct unless the local network blocks push | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-push.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-push.module) |
+| [`apple-services`](modules/apple-services.module) | Catch-all Apple and iCloud policy | Normal Apple routing after narrower modules | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-services.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-services.module) |
+| [`apple-updates`](modules/apple-updates.module) | Apple operating-system and component downloads | Keep large updates direct | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-updates.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-updates.module) |
+| [`back-to-cn`](modules/back-to-cn.module) | Chinese domains and IPs through a mainland node | Outside mainland China only | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/back-to-cn.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/back-to-cn.module) |
+| [`china-app-tun-compat`](modules/china-app-tun-compat.module) | Restores the old TUN list for selected mainland apps | Enable only when one of those apps fails | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/china-app-tun-compat.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/china-app-tun-compat.module) |
+| [`dns-mainland-china`](modules/dns-mainland-china.module) | AliDNS with DNSPod fallback over HTTPS | Mainland networks | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/dns-mainland-china.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/dns-mainland-china.module) |
+| [`httpdns-block`](modules/httpdns-block.module) | Known app-owned HTTPDNS endpoints | Apps that ignore system DNS | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/httpdns-block.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/httpdns-block.module) |
+| [`ipv6`](modules/ipv6.module) | IPv6 plus preferred AAAA answers | Only with IPv6-capable networks and nodes | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/ipv6.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/ipv6.module) |
+| [`privacy-dns`](modules/privacy-dns.module) | Cloudflare with Quad9 fallback over HTTPS | Hong Kong and travel outside mainland China | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/privacy-dns.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/privacy-dns.module) |
+| [`private-ip-block`](modules/private-ip-block.module) | Proxies domains that unexpectedly resolve to private IPs | DNS-hijack defence; disable for split DNS | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/private-ip-block.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/private-ip-block.module) |
+| [`real-ip-compat`](modules/real-ip-compat.module) | Real DNS answers for selected gaming and carrier hosts | Apps or consoles that fail with fake IP | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/real-ip-compat.module) · [jsDelivr](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/real-ip-compat.module) |
 
-Raw module URLs:
+Do not enable `adblock-core` and `adblock-lite` together. Do not enable both DNS
+modules together. Put `apple-account`, `apple-certificate-validation`,
+`apple-push`, `apple-updates`, and `apple-intelligence` above
+`apple-services`; their narrower rules must run first. Keep rejection modules
+above `back-to-cn`.
 
-```text
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/httpdns-block.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-core.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-lite.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-aggressive.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-services.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/privacy-dns.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/private-ip-block.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/real-ip-compat.module
-https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/back-to-cn.module
-```
+## Suggested module stacks
 
-Do not enable Core and Lite together. Lite is a subset of Core. Core plus
-Aggressive is intentional, though the overlap costs memory and initial parse
-time. Keep privacy/reject modules above `back-to-cn` so a broad China rule does
-not override a rejection.
+| Situation | Enable | Leave off or change |
+|---|---|---|
+| Hong Kong, normal use | `privacy-dns`, `private-ip-block`, `adblock-core`, Apple Account, Certificate Validation, Push, Updates, Services | Keep the App Store CDN alias off. Enable IPv6 only after testing every node. |
+| Mainland China, normal use | `dns-mainland-china`, `adblock-core`, Apple Account, Certificate Validation, Push, Updates, Services | Select `DIRECT` for the Apple groups first. Keep `privacy-dns`, `back-to-cn`, and IPv6 off. |
+| Mainland China, Apple Intelligence | Mainland stack plus `apple-intelligence` | Select one working US node. Do not change it during a request. |
+| Outside China, mainland apps | Hong Kong stack plus `back-to-cn` | The travel module needs a working mainland node. |
+| One mainland bank or carrier app fails | Current stack plus `china-app-tun-compat` | Remove it again if it does not fix that app. |
+
+### Apple sign-in recovery
+
+Apple lists four account hosts: `account.apple.com`,
+`appleid.cdn-apple.com`, `idmsa.apple.com`, and `gsa.apple.com`. The account
+module routes those hosts together and also includes `setup.icloud.com` for
+managed-device sign-in. Apple says these account hosts support proxies, but its
+TLS traffic must not be inspected.
+
+For a failed sign-in:
+
+1. Enable `apple-certificate-validation`. Disable `apple-app-store-cdn`,
+   `apple-intelligence`, `privacy-dns`, and `private-ip-block` temporarily.
+2. Set both Apple Account and Apple Services to `DIRECT`. Retry once.
+3. If direct access fails, select one fixed Hong Kong node as Shadowrocket's
+   Home server, then set both groups to `PROXY`. Do not change the Home server
+   during the login attempt.
+4. On iPhone, iPad, or Mac, turn off Limit IP Address Tracking for that network
+   while testing. Apple documents conflicts between Private Relay and VPN or
+   filtering software.
+5. Re-enable modules one at a time after login works.
 
 ## DNS and network behavior
 
 The base profile leaves DNS transport, port 53 interception, private-answer
-handling, and real-IP exceptions to Shadowrocket. Enable `privacy-dns` for
-Cloudflare and AliDNS over HTTPS with no system or plaintext fallback. DNS will
-fail if a network blocks both resolvers, so disable the module during captive
-portal sign-in or on a filtered network.
+handling, and real-IP exceptions to Shadowrocket. `privacy-dns` uses Cloudflare
+with Quad9 fallback. `dns-mainland-china` uses AliDNS with DNSPod fallback and
+disables HTTP/3 for its resolver connections. Both encrypt DNS over HTTPS and
+intercept port 53. Pick one; never enable both.
+
+These modules have no plaintext or system fallback. Disable the active DNS
+module during captive-portal sign-in or if both configured resolvers are
+blocked.
 
 Other current choices:
 
@@ -156,9 +197,55 @@ Other current choices:
   forces those domains through the proxy.
 - `real-ip-compat` bypasses fake-IP DNS for a short list of hosts that inspect
   addresses directly. Its list contains no Apple entries.
-- The Apple module maps `iosapps.itunes.apple.com` to a Kingsoft CDN alias.
+- The optional App Store CDN module maps `iosapps.itunes.apple.com` to a
+  Kingsoft alias. No other module changes Apple DNS answers.
 - TUN exclusions cover RFC1918, loopback, link-local, documentation, multicast,
   and selected discovery ranges.
+
+## Choosing proxy nodes
+
+This repository cannot safely bundle proxy nodes or subscriptions. Free proxy
+lists are a bad fit for Apple accounts, banking, or private traffic: ownership
+is unclear, exits rotate, and public endpoints disappear quickly.
+
+When comparing paid subscriptions or self-hosted servers, require all of the
+following:
+
+- VLESS + REALITY over TCP 443 and a separate Hysteria 2 or TUIC path.
+- Hong Kong, Japan, Singapore, and US exits, plus a mainland exit only if you
+  need `back-to-cn`.
+- Stable node names that match this profile's region filters.
+- A subscription URL that can refresh on the networks you use, plus an offline
+  copy for travel.
+- No installed root certificate, HTTPS decryption, or rotating residential
+  proxy requirement.
+- A short trial or refund window tested on both Wi-Fi and mobile data.
+
+No provider ranking is stored here. Resellers change servers, owners, and
+protocols too quickly for a committed list to stay trustworthy.
+
+For mainland China, start with VLESS + REALITY + XTLS Vision over TCP 443. It
+resembles ordinary TLS traffic and gives you a TCP path when UDP is filtered.
+Keep Hysteria 2 or TUIC as a second path for lossy networks where UDP works.
+Shadowsocks 2022 is useful in Hong Kong and as another fallback, but studies of
+the Great Firewall show that fully encrypted Shadowsocks-style traffic can be
+identified and blocked.
+
+The server route matters as much as the protocol:
+
+- Keep at least two independently operated subscriptions or servers.
+- Test Hong Kong first from mainland China, then Tokyo or Osaka, Singapore, and
+  a US node. The nearest city does not guarantee the best carrier path.
+- Test on the mainland Wi-Fi and mobile carriers you actually use. A node that
+  works from China Mobile can fail from China Telecom.
+- Use manual selection for Apple Account, banking, payments, and long-lived
+  sessions. Automatic latency groups can change the exit IP mid-session.
+- Never enable TLS decryption for Apple account, iCloud, push, or update hosts.
+
+Shadowrocket 2.2.92 has current support and fixes for VLESS, XTLS, Hysteria 2,
+TUIC, AnyTLS, WireGuard variants, and MASQUE. Support in the app does not prove
+that a provider configured the server side correctly. Test TCP and UDP paths
+separately before travel.
 
 ## Exports
 
@@ -190,11 +277,15 @@ The 2026-09-10 repair pass produced these results:
 - Shadowrocket and Surge rule targets now match their declared group names.
 - Reject rules run before the broad AI lists, so the known `segment.io` overlap
   stays rejected.
-- Apple direct exceptions precede the broad Apple sources. Shadowrocket keeps
-  the full Apple block in `apple-services.module` so it can be disabled.
+- Apple Account, certificate validation, push, updates, Intelligence, App Store
+  CDN, and catch-all routing are separate. The validator checks the official
+  account and certificate hosts and prevents narrower rules from returning to
+  `apple-services`.
 - Strict DNS, private-answer blocking, and real-IP exceptions stay outside the
   base profile and can be enabled separately.
-- `skip-proxy` contains local access and captive-portal detection only.
+- The base `skip-proxy` contains local access and captive-portal detection. The
+  older mainland app list is optional.
+- Every module has checked raw GitHub and jsDelivr import URLs in this README.
 - Quantumult X now uses `url-latency-benchmark`, forces ad and LAN/China policy
   outcomes, enables DoH, and includes OneDrive plus Prime Video.
 - Taiwan selectors use the Taiwan flag and no longer match `🇨🇳`.
@@ -253,6 +344,27 @@ pin a reviewed revision where possible, and retest after app updates.
 
 Client references used during maintenance:
 
+- [Apple network hosts and ports](https://support.apple.com/en-ie/101555) for
+  account, iCloud, push, update, and Intelligence endpoints
+- [Apple Private Relay network troubleshooting](https://support.apple.com/en-asia/102022)
+  for the per-network Limit IP Address Tracking advice
+- [Shadowrocket on the App Store](https://apps.apple.com/us/app/shadowrocket/id932747118)
+  for current protocol and client-fix history
+- [LOWERTOP Shadowrocket wiki](https://github.com/LOWERTOP/Shadowrocket/wiki)
+  for module, DNS, TUN, and policy syntax
+- [Xray REALITY](https://xtls.github.io/en/config/transports/reality.html),
+  [Hysteria 2 protocol](https://v2.hysteria.network/docs/developers/Protocol/),
+  and [Shadowsocks 2022](https://shadowsocks.org/doc/sip022.html) for proxy
+  protocol behavior
+- [GFW Report: fully encrypted traffic blocking](https://gfw.report/publications/usenixsecurity23/data/paper/paper.pdf)
+  for mainland protocol-detection evidence
+- [Free Proxies Unmasked](https://arxiv.org/abs/2403.02445) for measured
+  availability and security problems in public proxy services
+- [Cloudflare](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/make-api-requests/),
+  [Quad9](https://docs.quad9.net/services/),
+  [AliDNS](https://www.alidns.com/solution), and
+  [DNSPod](https://cloud.tencent.com.cn/document/product/302/110786) for the
+  DNS module endpoints
 - [mihomo rule-provider format](https://wiki.metacubex.one/en/config/rule-providers/)
 - [Surge rule-set format](https://manual.nssurge.com/rules/ruleset.html)
 - [Quantumult X sample configuration](https://github.com/crossutility/Quantumult-X/blob/master/sample.conf)

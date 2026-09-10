@@ -1,0 +1,7 @@
+#!name = Andy Network — IPv6
+#!desc = Enables IPv6 and prefers IPv6 DNS answers. Use only when the local network and every selected proxy node support IPv6.
+#!category = Network
+
+[General]
+ipv6 = true
+prefer-ipv6 = true

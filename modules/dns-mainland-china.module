@@ -1,0 +1,10 @@
+#!name = Andy DNS — Mainland China
+#!desc = Uses AliDNS with DNSPod fallback over HTTPS. HTTP/3 is disabled for steadier operation on filtered mainland networks.
+#!category = DNS
+
+[General]
+dns-server = https://dns.alidns.com/dns-query#no-h3
+fallback-dns-server = https://doh.pub/dns-query#no-h3
+dns-direct-system = false
+dns-direct-fallback-proxy = false
+hijack-dns = *:53

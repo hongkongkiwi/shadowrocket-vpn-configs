@@ -1,25 +1,11 @@
-#!name = Andy Apple — Direct Services
-#!desc = Keeps Apple services, Apple Intelligence, Private Cloud Compute, and software updates direct. Disable to let the main profile route Apple traffic normally.
+#!name = Andy Apple — Core Services
+#!desc = Catch-all policy for Apple and iCloud traffic. Add the smaller Apple modules above this one when account, push, update, or Intelligence traffic needs a different path.
 #!category = Apple
 
 [Proxy Group]
-🍎 Apple Services = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+🍎 Apple Services = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
 
 [Rule]
-# Exact direct exceptions must precede the broad Apple lists.
-DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
-DOMAIN,apple-relay.cloudflare.com,DIRECT
-DOMAIN,cp4.cloudflare.com,DIRECT
-DOMAIN,apple-relay.fastly-edge.com,DIRECT
-DOMAIN,gdmf.apple.com,DIRECT
-DOMAIN,swscan.apple.com,DIRECT
-DOMAIN,seed-sequoia.siri.apple.com,DIRECT
-DOMAIN,sequoia.siri.apple.com,DIRECT
-DOMAIN,sequoia.apple.com,DIRECT
-# AppleServers already covers APNs domains and 17.0.0.0/8; no separate dead Apple-Push source.
+# Broad fallback. Put narrower Apple modules above this module.
 RULE-SET,https://github.com/Repcz/Tool/raw/X/Shadowrocket/Rules/AppleCN.list,🍎 Apple Services
 RULE-SET,https://github.com/Repcz/Tool/raw/X/Shadowrocket/Rules/AppleServers.list,🍎 Apple Services
-
-[Host]
-# App Store download requests resolved via Kingsoft CDN.
-iosapps.itunes.apple.com = iosapps.itunes.apple.com.download.ks-cdn.com

@@ -1,10 +1,10 @@
 #!name = Andy Privacy — Encrypted DNS
-#!desc = Uses Cloudflare and AliDNS over HTTPS and intercepts port 53. Disable on captive portals or networks that block both resolvers.
+#!desc = Uses Cloudflare with Quad9 fallback over HTTPS and intercepts port 53. Intended for Hong Kong and travel outside mainland China.
 #!category = Privacy
 
 [General]
-dns-server = https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query
-fallback-dns-server = https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query
+dns-server = https://cloudflare-dns.com/dns-query
+fallback-dns-server = https://dns.quad9.net/dns-query
 dns-direct-system = false
 dns-direct-fallback-proxy = false
 hijack-dns = *:53

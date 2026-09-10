@@ -97,7 +97,10 @@ proxy-groups:
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🍎 Apple Services"
     type: select
-    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node]
+    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
+  - name: "🔐 Apple Account"
+    type: select
+    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
   - name: "🐟 Fallback Routing"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
@@ -355,13 +358,28 @@ rules:
   - RULE-SET,emby,📽️ Emby
   - RULE-SET,steam,🎮 Gaming Platforms
   - RULE-SET,epic,🎮 Gaming Platforms
-  # Apple direct exceptions precede the broad lists.
-  - DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
-  - DOMAIN,apple-relay.cloudflare.com,DIRECT
-  - DOMAIN,cp4.cloudflare.com,DIRECT
-  - DOMAIN,apple-relay.fastly-edge.com,DIRECT
-  - DOMAIN,gdmf.apple.com,DIRECT
-  - DOMAIN,swscan.apple.com,DIRECT
+  # Apple Account and certificate checks precede the broad lists.
+  - DOMAIN,account.apple.com,🔐 Apple Account
+  - DOMAIN,appleid.cdn-apple.com,🔐 Apple Account
+  - DOMAIN,idmsa.apple.com,🔐 Apple Account
+  - DOMAIN,gsa.apple.com,🔐 Apple Account
+  - DOMAIN,setup.icloud.com,🔐 Apple Account
+  - DOMAIN,certs.apple.com,DIRECT
+  - DOMAIN,crl.apple.com,DIRECT
+  - DOMAIN,crl3.digicert.com,DIRECT
+  - DOMAIN,crl4.digicert.com,DIRECT
+  - DOMAIN,ocsp.apple.com,DIRECT
+  - DOMAIN,ocsp.digicert.cn,DIRECT
+  - DOMAIN,ocsp.digicert.com,DIRECT
+  - DOMAIN,ocsp2.apple.com,DIRECT
+  - DOMAIN,valid.apple.com,DIRECT
+  - DOMAIN-SUFFIX,appattest.apple.com,DIRECT
+  - DOMAIN-SUFFIX,gateway.icloud.com,🍎 Apple Services
+  - DOMAIN,apple-relay.cloudflare.com,🍎 Apple Services
+  - DOMAIN,cp4.cloudflare.com,🍎 Apple Services
+  - DOMAIN,apple-relay.fastly-edge.com,🍎 Apple Services
+  - DOMAIN,gdmf.apple.com,🍎 Apple Services
+  - DOMAIN,swscan.apple.com,🍎 Apple Services
   - RULE-SET,apple,🍎 Apple Services
   - RULE-SET,applecn,🍎 Apple Services
   # CN direct (domain first, then geo fallback)

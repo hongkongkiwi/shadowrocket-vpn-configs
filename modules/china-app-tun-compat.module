@@ -1,0 +1,6 @@
+#!name = Andy China — App TUN Compatibility
+#!desc = Sends selected mainland bank, carrier, travel, and utility apps through Shadowrocket's TUN interface. Enable only if one of these apps fails.
+#!category = Compatibility
+
+[General]
+skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, captive.apple.com, e.crashlytics.com, passenger.t3go.cn, www.baidu.com, yunbusiness.ccb.com, wxh.wo.cn, gate.lagou.com, www.abchina.com.cn, www.shanbay.com, login-service.mobile-bank.psbc.com, mobile-bank.psbc.com
