@@ -1,0 +1,27 @@
+min_version: 1.8.0
+
+pre-commit:
+  parallel: false
+  commands:
+    whitespace:
+      run: git diff --cached --check
+    configs:
+      run: ruby scripts/validate_configs.rb
+    soul:
+      run: ruby scripts/validate_soul_module.rb
+
+pre-push:
+  parallel: false
+  scripts:
+    "no-direct-main.sh":
+      priority: 1
+      runner: sh
+      use_stdin: true
+  commands:
+    offline-checks:
+      priority: 2
+      run: |
+        ruby scripts/validate_configs.rb &&
+        ruby scripts/validate_soul_module.rb &&
+        ruby scripts/test_config_validation.rb &&
+        ruby scripts/audit_remote_sources.rb --self-test

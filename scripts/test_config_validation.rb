@@ -91,4 +91,17 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
   abort "Missed shared tenant suffixes: #{output}" unless !status.success? && shared.all? { |host| output.include?("shared service/CDN scope: DOMAIN-SUFFIX,#{host}") }
   checks += 1
 end
+# Exercise the push guard without changing refs or contacting a remote.
+guard = File.join(root, ".lefthook/pre-push/no-direct-main.sh")
+{
+  "" => true,
+  "refs/heads/topic abc refs/heads/topic def\n" => true,
+  "refs/heads/topic abc refs/heads/main def\n" => false,
+  "refs/heads/topic abc refs/heads/master def\n" => false,
+  "refs/heads/topic abc refs/heads/topic def\n(delete) 000 refs/heads/main def\n" => false
+}.each do |input, expected_success|
+  output, status = Open3.capture2e("sh", guard, stdin_data: input)
+  abort "Push guard regression for #{input.inspect}: #{output}" unless status.success? == expected_success
+  checks += 1
+end
 puts "Config validator regression checks passed (#{checks} cases)."
