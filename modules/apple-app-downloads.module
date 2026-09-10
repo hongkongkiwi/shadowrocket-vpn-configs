@@ -1,0 +1,18 @@
+#!name = Andy Apple — App Downloads
+#!desc = Gives App Store and Apple-hosted content downloads their own route. Keep the Kingsoft DNS alias separate.
+#!category = Apple
+
+[Proxy Group]
+📲 Apple App Downloads = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+DOMAIN-SUFFIX,itunes.apple.com,📲 Apple App Downloads
+DOMAIN-SUFFIX,apps.apple.com,📲 Apple App Downloads
+DOMAIN-SUFFIX,mzstatic.com,📲 Apple App Downloads
+DOMAIN-SUFFIX,appstore.com,📲 Apple App Downloads
+DOMAIN-SUFFIX,appsto.re,📲 Apple App Downloads
+DOMAIN,audiocontentdownload.apple.com,📲 Apple App Downloads
+DOMAIN,devimages-cdn.apple.com,📲 Apple App Downloads
+DOMAIN,download.developer.apple.com,📲 Apple App Downloads
+DOMAIN,playground-assets-cdn.apple.com,📲 Apple App Downloads
+DOMAIN,playground-cdn.apple.com,📲 Apple App Downloads

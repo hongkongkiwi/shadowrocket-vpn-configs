@@ -6,13 +6,24 @@
 🍏 Apple Updates = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
 
 [Rule]
-DOMAIN,gateway.icloud.com,🍏 Apple Updates
+DOMAIN,configuration.apple.com,🍏 Apple Updates
 DOMAIN,gdmf.apple.com,🍏 Apple Updates
+DOMAIN,gdmf-ados.apple.com,🍏 Apple Updates
+DOMAIN,gg.apple.com,🍏 Apple Updates
+DOMAIN,gs.apple.com,🍏 Apple Updates
+DOMAIN,gsra.apple.com,🍏 Apple Updates
+DOMAIN,ig.apple.com,🍏 Apple Updates
 DOMAIN,swscan.apple.com,🍏 Apple Updates
 DOMAIN,appldnld.apple.com,🍏 Apple Updates
 DOMAIN,mesu.apple.com,🍏 Apple Updates
+DOMAIN,oscdn.apple.com,🍏 Apple Updates
+DOMAIN,osrecovery.apple.com,🍏 Apple Updates
+DOMAIN,skl.apple.com,🍏 Apple Updates
 DOMAIN,swcdn.apple.com,🍏 Apple Updates
 DOMAIN,swdist.apple.com,🍏 Apple Updates
 DOMAIN,swdownload.apple.com,🍏 Apple Updates
+DOMAIN,wkms-public.apple.com,🍏 Apple Updates
+DOMAIN,xp.apple.com,🍏 Apple Updates
+DOMAIN-SUFFIX,fcs-keys-pub-prod.cdn-apple.com,🍏 Apple Updates
 DOMAIN-SUFFIX,updates-http.cdn-apple.com,🍏 Apple Updates
 DOMAIN-SUFFIX,updates.cdn-apple.com,🍏 Apple Updates

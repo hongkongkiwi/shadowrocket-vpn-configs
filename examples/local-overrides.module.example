@@ -1,0 +1,8 @@
+#!name = Local Overrides
+#!desc = Personal rules loaded above shared modules and the base profile. Copy outside the repository and remove the comment markers.
+#!category = Local
+
+[Rule]
+# DOMAIN,internal.example,DIRECT
+# DOMAIN-SUFFIX,work.example,PROXY
+# IP-CIDR,192.0.2.10/32,DIRECT,no-resolve

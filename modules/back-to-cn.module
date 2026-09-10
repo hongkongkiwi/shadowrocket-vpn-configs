@@ -1,12 +1,14 @@
-#!name = Andy Travel — Back to China
-#!desc = Overseas only. Routes CN domains + China IPs through a proxy group so WeChat Pay/Taobao/Bilibili etc. work abroad. Enable only when outside China (or VPN makes you appear outside). Requires a 🇨🇳 CN Node url-test group or rename group below to match one of yours.
+#!name = Andy Travel — Back to China (Targeted)
+#!desc = Overseas only. Routes selected mainland apps through a mainland exit. Choose one fixed node for account and payment sessions.
 #!category = Travel
 
 [Proxy Group]
-🇨🇳 CN Node = url-test,url=http://1.1.1.1/generate_204,interval=300,tolerance=0,timeout=3,select=0,policy-regex-filter=(?i)回国|🇨🇳|中国|回国节点|(\b(CN|China)\b)
+🇨🇳 CN Auto = url-test,url=http://1.1.1.1/generate_204,interval=300,tolerance=50,timeout=3,select=0,policy-regex-filter=(?i)回国|🇨🇳|中国|回国节点|(\b(CN|China)\b)
+🇨🇳 Return to China = select,🇨🇳 CN Auto,PROXY,DIRECT,use=true,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204,policy-regex-filter=(?i)回国|🇨🇳|中国|回国节点|(\b(CN|China)\b)
 
 [Rule]
-# China domains via proxy (carrnot list, from dnsmasq-china-list)
-RULE-SET,https://raw.githubusercontent.com/carrnot/china-domain-list/release/rocket.txt,🇨🇳 CN Node
-# China IPs via proxy (Shadowrocket-native IP-CIDR rules)
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/ChinaIPs/ChinaIPs.list,🇨🇳 CN Node
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/WeChat/WeChat.list,🇨🇳 Return to China
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/AliPay/AliPay.list,🇨🇳 Return to China
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/BiliBili/BiliBili.list,🇨🇳 Return to China
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/NetEaseMusic/NetEaseMusic.list,🇨🇳 Return to China
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/ChinaMedia/ChinaMedia.list,🇨🇳 Return to China

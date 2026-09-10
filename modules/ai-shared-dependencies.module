@@ -1,0 +1,24 @@
+#!name = Andy AI — Shared Dependencies
+#!desc = Routes shared login, payment, telemetry, and CDN services with OpenAI. Enable only if sign-in or billing fails; it also affects unrelated apps using those providers.
+#!category = Compatibility
+
+[Proxy Group]
+🧩 AI Shared Dependencies = select,🤖 OpenAI,PROXY,🇺🇸 US Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇭🇰 Hong Kong Node,🇹🇼 Taiwan Node,DIRECT,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+DOMAIN-SUFFIX,auth0.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,stripe.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,sentry.io,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,intercom.io,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,intercomcdn.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,segment.io,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,launchdarkly.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,statsig.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,statsigapi.net,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,featuregates.org,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,algolia.net,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,identrust.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,livekit.cloud,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,arkoselabs.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,datadoghq.com,🧩 AI Shared Dependencies
+DOMAIN-SUFFIX,cloudflareinsights.com,🧩 AI Shared Dependencies

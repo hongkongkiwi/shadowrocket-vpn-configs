@@ -3,5 +3,9 @@
 #!category = Adblock
 
 [Rule]
+DOMAIN,token.safebrowsing.apple,DIRECT
+DOMAIN,safebrowsing.googleapis.com,DIRECT
+DOMAIN,safebrowsing.googleapis-cn.com,DIRECT
+DOMAIN,safebrowsing.urlsec.qq.com,DIRECT
 # anti-AD — China-focused ad domains, huge (Surge syntax = Shadowrocket-compatible)
 RULE-SET,https://anti-ad.net/surge.txt,REJECT

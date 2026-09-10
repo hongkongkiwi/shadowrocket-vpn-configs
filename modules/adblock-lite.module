@@ -3,5 +3,10 @@
 #!category = Adblock
 
 [Rule]
+DOMAIN,token.safebrowsing.apple,DIRECT
+DOMAIN,safebrowsing.googleapis.com,DIRECT
+DOMAIN,safebrowsing.googleapis-cn.com,DIRECT
+DOMAIN,safebrowsing.urlsec.qq.com,DIRECT
 # blackmatrix7 AdvertisingLite — smaller curated subset of Advertising
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/AdvertisingLite/AdvertisingLite.list,REJECT
+DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/AdvertisingLite/AdvertisingLite_Domain.list,REJECT
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/AdvertisingLite/AdvertisingLite.list,REJECT

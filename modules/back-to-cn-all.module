@@ -1,0 +1,11 @@
+#!name = Andy Travel — Back to China (All)
+#!desc = Overseas only. Routes all mainland domains and IPs through a mainland exit. Use instead of the targeted module.
+#!category = Travel
+
+[Proxy Group]
+🇨🇳 CN Auto = url-test,url=http://1.1.1.1/generate_204,interval=300,tolerance=50,timeout=3,select=0,policy-regex-filter=(?i)回国|🇨🇳|中国|回国节点|(\b(CN|China)\b)
+🇨🇳 Return to China = select,🇨🇳 CN Auto,PROXY,DIRECT,use=true,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204,policy-regex-filter=(?i)回国|🇨🇳|中国|回国节点|(\b(CN|China)\b)
+
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/carrnot/china-domain-list/d13f21bc3c047664c9f5fda5d2a3c7d608df3d46/rocket.txt,🇨🇳 Return to China
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/ChinaIPs/ChinaIPs.list,🇨🇳 Return to China

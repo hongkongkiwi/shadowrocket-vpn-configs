@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -12,4 +15,6 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
+      - run: ruby scripts/validate_soul_module.rb
       - run: ruby scripts/validate_configs.rb
+      - run: ruby scripts/audit_remote_sources.rb --self-test

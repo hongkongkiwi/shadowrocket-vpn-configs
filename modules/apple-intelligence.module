@@ -1,17 +1,12 @@
-#!name = Andy Apple — Intelligence
-#!desc = Routes Siri, Apple Intelligence, and Private Cloud Compute separately. A US node is first for accounts and devices that need a supported region.
+#!name = Andy Apple — Intelligence Cloud
+#!desc = Routes Apple Intelligence Extensions and Private Cloud Compute through one supported-region exit. Siri and Search have their own module.
 #!category = Apple
 
 [Proxy Group]
-🧠 Apple Intelligence = select,🇺🇸 US Node,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,DIRECT,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+🧠 Apple PCC = select,🇺🇸 US Node,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,DIRECT,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
 
 [Rule]
-DOMAIN,guzzoni.apple.com,🧠 Apple Intelligence
-DOMAIN-SUFFIX,smoot.apple.com,🧠 Apple Intelligence
-DOMAIN,apple-relay.cloudflare.com,🧠 Apple Intelligence
-DOMAIN,apple-relay.fastly-edge.com,🧠 Apple Intelligence
-DOMAIN,cp4.cloudflare.com,🧠 Apple Intelligence
-DOMAIN,apple-relay.apple.com,🧠 Apple Intelligence
-DOMAIN,seed-sequoia.siri.apple.com,🧠 Apple Intelligence
-DOMAIN,sequoia.siri.apple.com,🧠 Apple Intelligence
-DOMAIN,sequoia.apple.com,🧠 Apple Intelligence
+DOMAIN,apple-relay.apple.com,🧠 Apple PCC
+DOMAIN,apple-relay.cloudflare.com,🧠 Apple PCC
+DOMAIN,apple-relay.fastly-edge.com,🧠 Apple PCC
+DOMAIN,cp4.cloudflare.com,🧠 Apple PCC

@@ -1,0 +1,14 @@
+#!name = Andy Soul — KTV (Mainland Node Required)
+#!desc = Leave disabled until you have a verified mainland China proxy with UDP support. Covered Soul domains are rejected until you add and select that exact node. KTV access and audio are unverified.
+#!category = Travel
+
+[Proxy Group]
+# Deliberately no DIRECT, PROXY, regional group, or automatic node filter.
+# Add your verified mainland node to a local copy, retaining REJECT first.
+🎤 Soul KTV = select,REJECT,select=0
+
+[Rule]
+# Soul-owned domain families only; this also affects ordinary Soul usage.
+# Shared RTC/music hosts need a future connection-log review. This is not an app-wide kill switch.
+DOMAIN-SUFFIX,soulapp.cn,🎤 Soul KTV
+DOMAIN-SUFFIX,soulapp.me,🎤 Soul KTV

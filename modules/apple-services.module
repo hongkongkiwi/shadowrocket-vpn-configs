@@ -7,5 +7,5 @@
 
 [Rule]
 # Broad fallback. Put narrower Apple modules above this module.
-RULE-SET,https://github.com/Repcz/Tool/raw/X/Shadowrocket/Rules/AppleCN.list,🍎 Apple Services
-RULE-SET,https://github.com/Repcz/Tool/raw/X/Shadowrocket/Rules/AppleServers.list,🍎 Apple Services
+RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/AppleCN.list,🍎 Apple Services
+RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/AppleServers.list,🍎 Apple Services

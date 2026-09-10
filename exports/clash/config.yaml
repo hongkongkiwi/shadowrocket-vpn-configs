@@ -16,9 +16,6 @@ unified-delay: true
 tcp-concurrent: true
 
 geodata-mode: false          # use .mrs rule-providers below, not geo databases
-geox-url:
-  geoip: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geoip.dat"
-  geosite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/release/geosite.dat"
 
 dns:
   enable: true
@@ -28,8 +25,8 @@ dns:
   fake-ip-range: 198.18.0.1/16
   # Used only to resolve DoH hostnames before the encrypted resolvers are ready.
   default-nameserver:
-    - "223.5.5.5"
-    - "119.29.29.29"
+    - "1.1.1.1"
+    - "9.9.9.9"
   fake-ip-filter:
     - "*.lan"
     - "*.local"
@@ -55,7 +52,7 @@ dns:
     - "+.10099.com.cn"
   nameserver:
     - "https://1.1.1.1/dns-query"
-    - "https://dns.alidns.com/dns-query"
+    - "https://dns.quad9.net/dns-query"
 
 proxy-groups:
   # PROXY = every node from your imported subscription (include-all)
@@ -64,41 +61,80 @@ proxy-groups:
     include-all: true
   - name: "🌍 Foreign Websites"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
-  - name: "📽️ International Media"
-    type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "📱 TikTok"
     type: select
     proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🖥️ Microsoft Services"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🌌 Google Services"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "📟 Telegram Messages"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🐦 Twitter Messages"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
-  - name: "🤖 AI"
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🤖 OpenAI"
     type: select
-    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🧠 Claude"
+    type: select
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "💎 Google AI"
+    type: select
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "💻 Developer Services"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "▶️ YouTube"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🎬 Netflix"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🏰 Disney+"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "📦 Prime Video"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "📺 HBO"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🐉 Bahamut"
+    type: select
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🎮 Gaming Platforms"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "📽️ Emby"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🎵 Spotify"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🍎 Apple Services"
     type: select
     proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
   - name: "🔐 Apple Account"
+    type: select
+    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
+  - name: "📲 Apple App Downloads"
+    type: select
+    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
+  - name: "🍏 Apple Updates"
+    type: select
+    proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
+  - name: "🗣️ Siri & Search"
+    type: select
+    proxies: [DIRECT, 🇺🇸 US Node, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
+  - name: "🧠 Apple PCC"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🔔 Apple Push"
     type: select
     proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, 🇺🇸 US Node]
   - name: "🐟 Fallback Routing"
@@ -141,224 +177,219 @@ proxy-groups:
     filter: "(?i)🇹🇼|台湾|(\\b(TW|Tai|Taiwan)\\b)"
 
 rule-providers:
-  ai-vpsdance:
-    type: http
-    behavior: classical
-    format: yaml
-    url: "https://cdn.jsdelivr.net/gh/VPSDance/ai-proxy-rules@main/rules/clash/global.yaml"
-    interval: 86400
-    path: ./rules/ai-vpsdance.yaml
-  ai-openai:
-    type: http
-    behavior: classical
-    format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
-    interval: 86400
-    path: ./rules/ai-openai.yaml
   ai-claude:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Claude/Claude.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Claude/Claude.yaml"
     interval: 86400
     path: ./rules/ai-claude.yaml
+  ai-gemini:
+    type: http
+    behavior: classical
+    format: yaml
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Gemini/Gemini.yaml"
+    interval: 86400
+    path: ./rules/ai-gemini.yaml
   telegram:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Telegram/Telegram.yaml"
     interval: 86400
     path: ./rules/telegram.yaml
   twitter:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Twitter/Twitter.yaml"
     interval: 86400
     path: ./rules/twitter.yaml
   github:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/GitHub/GitHub.yaml"
     interval: 86400
     path: ./rules/github.yaml
   onedrive:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/OneDrive/OneDrive.yaml"
     interval: 86400
     path: ./rules/onedrive.yaml
   microsoft:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Microsoft/Microsoft.yaml"
     interval: 86400
     path: ./rules/microsoft.yaml
   youtube:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/YouTube/YouTube.yaml"
     interval: 86400
     path: ./rules/youtube.yaml
   google:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Google/Google.yaml"
     interval: 86400
     path: ./rules/google.yaml
   spotify:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Spotify/Spotify.yaml"
     interval: 86400
     path: ./rules/spotify.yaml
   bahamut:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bahamut/Bahamut.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Bahamut/Bahamut.yaml"
     interval: 86400
     path: ./rules/bahamut.yaml
   netflix:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Netflix/Netflix.yaml"
     interval: 86400
     path: ./rules/netflix.yaml
   disney:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Disney/Disney.yaml"
     interval: 86400
     path: ./rules/disney.yaml
   primevideo:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PrimeVideo/PrimeVideo.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/PrimeVideo/PrimeVideo.yaml"
     interval: 86400
     path: ./rules/primevideo.yaml
   hbo:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/HBO/HBO.yaml"
     interval: 86400
     path: ./rules/hbo.yaml
   tiktok:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/TikTok/TikTok.yaml"
     interval: 86400
     path: ./rules/tiktok.yaml
   emby:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Emby/Emby.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Emby/Emby.yaml"
     interval: 86400
     path: ./rules/emby.yaml
   steam:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Steam/Steam.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Steam/Steam.yaml"
     interval: 86400
     path: ./rules/steam.yaml
   epic:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Epic/Epic.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Epic/Epic.yaml"
     interval: 86400
     path: ./rules/epic.yaml
   apple:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Apple/Apple.yaml"
     interval: 86400
     path: ./rules/apple.yaml
   applecn:
     type: http
     behavior: domain
     format: mrs
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/a1985d26a15f217dfd539e789c19a6d49f78b624/geo/geosite/apple-cn.mrs"
     interval: 86400
     path: ./rules/apple-cn.mrs
-  ads:
-    type: http
-    behavior: domain
-    format: mrs
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/category-ads-all.mrs"
-    interval: 86400
-    path: ./rules/ads.mrs
   chinadirect:
     type: http
     behavior: domain
     format: mrs
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/a1985d26a15f217dfd539e789c19a6d49f78b624/geo/geosite/cn.mrs"
     interval: 86400
     path: ./rules/cn.mrs
   geolocation-not-cn:
     type: http
     behavior: domain
     format: mrs
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/a1985d26a15f217dfd539e789c19a6d49f78b624/geo/geosite/geolocation-!cn.mrs"
     interval: 86400
     path: ./rules/geolocation-not-cn.mrs
   cn-ip:
     type: http
     behavior: ipcidr
     format: mrs
-    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs"
+    url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/a1985d26a15f217dfd539e789c19a6d49f78b624/geo/geoip/cn.mrs"
     interval: 86400
     path: ./rules/cn-ip.mrs
   lan:
     type: http
     behavior: classical
     format: yaml
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Clash/Lan/Lan.yaml"
     interval: 86400
     path: ./rules/lan.yaml
 
 rules:
-  # Ads first so overlaps such as segment.io stay rejected.
-  - RULE-SET,ads,REJECT
   # AI
-  - RULE-SET,ai-vpsdance,🤖 AI
-  - RULE-SET,ai-openai,🤖 AI
-  - RULE-SET,ai-claude,🤖 AI
+  - DOMAIN,chat.openai.com.cdn.cloudflare.net,🤖 OpenAI
+  - DOMAIN,openai-api.arkoselabs.com,🤖 OpenAI
+  - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 OpenAI
+  - DOMAIN,openaicomproductionae4b.blob.core.windows.net,🤖 OpenAI
+  - DOMAIN,production-openaicom-storage.azureedge.net,🤖 OpenAI
+  - DOMAIN-SUFFIX,chatgpt.com,🤖 OpenAI
+  - DOMAIN-SUFFIX,chatgpt.livekit.cloud,🤖 OpenAI
+  - DOMAIN-SUFFIX,oaistatic.com,🤖 OpenAI
+  - DOMAIN-SUFFIX,oaiusercontent.com,🤖 OpenAI
+  - DOMAIN-SUFFIX,openai.com,🤖 OpenAI
+  - DOMAIN-SUFFIX,openaiapi-site.azureedge.net,🤖 OpenAI
+  - DOMAIN-SUFFIX,openaicom.imgix.net,🤖 OpenAI
+  - RULE-SET,ai-claude,🧠 Claude
+  - RULE-SET,ai-gemini,💎 Google AI
   # LAN
   - RULE-SET,lan,DIRECT
   # Services
   - RULE-SET,telegram,📟 Telegram Messages
   - RULE-SET,twitter,🐦 Twitter Messages
-  - RULE-SET,github,🖥️ Microsoft Services
+  - RULE-SET,github,💻 Developer Services
   - RULE-SET,onedrive,🖥️ Microsoft Services
   - RULE-SET,microsoft,🖥️ Microsoft Services
-  - RULE-SET,youtube,🌌 Google Services
+  - RULE-SET,youtube,▶️ YouTube
   - RULE-SET,google,🌌 Google Services
   - RULE-SET,spotify,🎵 Spotify
-  - RULE-SET,bahamut,📽️ International Media
-  - RULE-SET,netflix,📽️ International Media
-  - RULE-SET,disney,📽️ International Media
-  - RULE-SET,primevideo,📽️ International Media
-  - RULE-SET,hbo,📽️ International Media
+  - RULE-SET,bahamut,🐉 Bahamut
+  - RULE-SET,netflix,🎬 Netflix
+  - RULE-SET,disney,🏰 Disney+
+  - RULE-SET,primevideo,📦 Prime Video
+  - RULE-SET,hbo,📺 HBO
   - RULE-SET,tiktok,📱 TikTok
   - RULE-SET,emby,📽️ Emby
   - RULE-SET,steam,🎮 Gaming Platforms
   - RULE-SET,epic,🎮 Gaming Platforms
-  # Apple Account and certificate checks precede the broad lists.
+  # Narrow Apple rules precede the broad Apple Services list.
   - DOMAIN,account.apple.com,🔐 Apple Account
   - DOMAIN,appleid.cdn-apple.com,🔐 Apple Account
   - DOMAIN,idmsa.apple.com,🔐 Apple Account
@@ -374,12 +405,46 @@ rules:
   - DOMAIN,ocsp2.apple.com,DIRECT
   - DOMAIN,valid.apple.com,DIRECT
   - DOMAIN-SUFFIX,appattest.apple.com,DIRECT
+  - DOMAIN-SUFFIX,itunes.apple.com,📲 Apple App Downloads
+  - DOMAIN-SUFFIX,apps.apple.com,📲 Apple App Downloads
+  - DOMAIN-SUFFIX,mzstatic.com,📲 Apple App Downloads
+  - DOMAIN-SUFFIX,appstore.com,📲 Apple App Downloads
+  - DOMAIN-SUFFIX,appsto.re,📲 Apple App Downloads
+  - DOMAIN,audiocontentdownload.apple.com,📲 Apple App Downloads
+  - DOMAIN,devimages-cdn.apple.com,📲 Apple App Downloads
+  - DOMAIN,download.developer.apple.com,📲 Apple App Downloads
+  - DOMAIN,playground-assets-cdn.apple.com,📲 Apple App Downloads
+  - DOMAIN,playground-cdn.apple.com,📲 Apple App Downloads
+  - DOMAIN,configuration.apple.com,🍏 Apple Updates
+  - DOMAIN,gdmf.apple.com,🍏 Apple Updates
+  - DOMAIN,gdmf-ados.apple.com,🍏 Apple Updates
+  - DOMAIN,gg.apple.com,🍏 Apple Updates
+  - DOMAIN,gs.apple.com,🍏 Apple Updates
+  - DOMAIN,gsra.apple.com,🍏 Apple Updates
+  - DOMAIN,ig.apple.com,🍏 Apple Updates
+  - DOMAIN,swscan.apple.com,🍏 Apple Updates
+  - DOMAIN,appldnld.apple.com,🍏 Apple Updates
+  - DOMAIN,mesu.apple.com,🍏 Apple Updates
+  - DOMAIN,oscdn.apple.com,🍏 Apple Updates
+  - DOMAIN,osrecovery.apple.com,🍏 Apple Updates
+  - DOMAIN,skl.apple.com,🍏 Apple Updates
+  - DOMAIN,swcdn.apple.com,🍏 Apple Updates
+  - DOMAIN,swdist.apple.com,🍏 Apple Updates
+  - DOMAIN,swdownload.apple.com,🍏 Apple Updates
+  - DOMAIN,wkms-public.apple.com,🍏 Apple Updates
+  - DOMAIN,xp.apple.com,🍏 Apple Updates
+  - DOMAIN-SUFFIX,fcs-keys-pub-prod.cdn-apple.com,🍏 Apple Updates
+  - DOMAIN-SUFFIX,updates-http.cdn-apple.com,🍏 Apple Updates
+  - DOMAIN-SUFFIX,updates.cdn-apple.com,🍏 Apple Updates
+  - DOMAIN,guzzoni.apple.com,🗣️ Siri & Search
+  - DOMAIN-SUFFIX,smoot.apple.com,🗣️ Siri & Search
+  - DOMAIN,apple-relay.apple.com,🧠 Apple PCC
+  - DOMAIN,apple-relay.cloudflare.com,🧠 Apple PCC
+  - DOMAIN,apple-relay.fastly-edge.com,🧠 Apple PCC
+  - DOMAIN,cp4.cloudflare.com,🧠 Apple PCC
+  - DOMAIN-SUFFIX,push.apple.com,🔔 Apple Push
+  - DOMAIN-SUFFIX,push-apple.com.akadns.net,🔔 Apple Push
   - DOMAIN-SUFFIX,gateway.icloud.com,🍎 Apple Services
-  - DOMAIN,apple-relay.cloudflare.com,🍎 Apple Services
-  - DOMAIN,cp4.cloudflare.com,🍎 Apple Services
-  - DOMAIN,apple-relay.fastly-edge.com,🍎 Apple Services
-  - DOMAIN,gdmf.apple.com,🍎 Apple Services
-  - DOMAIN,swscan.apple.com,🍎 Apple Services
   - RULE-SET,apple,🍎 Apple Services
   - RULE-SET,applecn,🍎 Apple Services
   # CN direct (domain first, then geo fallback)

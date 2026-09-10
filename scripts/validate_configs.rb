@@ -1,9 +1,20 @@
 #!/usr/bin/env ruby
 
 require "yaml"
+require "uri"
 
 ROOT = File.expand_path("..", __dir__)
 BUILT_INS = %w[DIRECT REJECT PROXY direct reject proxy].freeze
+BASE = "shadowrocket.conf"
+SURGE = "exports/surge/Surge.conf"
+CLASH = "exports/clash/config.yaml"
+QX = "exports/quantumultx/QuantumultX.conf"
+MODULE_CONFLICTS = [
+  %w[adblock-core adblock-lite],
+  %w[privacy-dns dns-mainland-china],
+  %w[back-to-cn back-to-cn-all],
+  %w[ipv6 ipv6-preferred]
+].freeze
 errors = []
 
 def lines(path)
@@ -17,10 +28,7 @@ def section(path, name)
       active = true
       next
     end
-    if line.start_with?("[")
-      active = false
-      next
-    end
+    active = false if line.start_with?("[")
     result << line if active
   end
 end
@@ -35,210 +43,352 @@ end
 
 def rule_policy(line)
   fields = line.split(",").map(&:strip)
-  case fields.first.upcase
-  when "FINAL", "MATCH" then fields[1]
-  else fields[2]
-  end
+  %w[FINAL MATCH].include?(fields.first.upcase) ? fields[1] : fields[2]
 end
 
-def precedes?(body, first, second)
-  first_index = body.index(first)
-  second_index = body.index(second)
-  first_index && second_index && first_index < second_index
-end
-
-def check_policy_refs(path, known, errors)
-  entries(path, "Rule").each do |line|
+def check_rule_refs(path, known, errors, section_name = "Rule")
+  entries(path, section_name).each do |line|
     policy = rule_policy(line)
-    next if known.include?(policy)
-
-    errors << "#{path}: unresolved policy #{policy.inspect} in #{line.inspect}"
+    errors << "#{path}: unresolved policy #{policy.inspect} in #{line.inspect}" unless known.include?(policy)
   end
 end
 
-base_groups = groups("shadowrocket.conf")
-check_policy_refs("shadowrocket.conf", base_groups + BUILT_INS, errors)
-check_policy_refs("exports/surge/Surge.conf", groups("exports/surge/Surge.conf") + BUILT_INS, errors)
+def group_members(line)
+  fields = line.split("=", 2).last.split(",").map(&:strip)
+  fields.drop(1).take_while { |field| !field.include?("=") }
+end
+
+def check_groups(path, available, errors)
+  own = groups(path)
+  errors << "#{path}: duplicate group name" unless own.uniq == own
+
+  entries(path, "Proxy Group").each do |line|
+    name = line.split("=", 2).first.strip
+    group_members(line).each do |member|
+      next if (available + BUILT_INS).include?(member)
+      errors << "#{path}: #{name.inspect} references unknown group #{member.inspect}"
+    end
+  end
+
+  graph = own.to_h do |name|
+    line = entries(path, "Proxy Group").find { |entry| entry.split("=", 2).first.strip == name }
+    [name, group_members(line).select { |member| own.include?(member) }]
+  end
+  visiting = {}
+  visit = lambda do |name|
+    return errors << "#{path}: policy-group cycle through #{name.inspect}" if visiting[name] == :active
+    return if visiting[name] == :done
+    visiting[name] = :active
+    graph.fetch(name, []).each { |child| visit.call(child) }
+    visiting[name] = :done
+  end
+  own.each { |name| visit.call(name) }
+end
+
+def require_text(body, text, label, errors)
+  errors << "#{label}: missing #{text.inspect}" unless body.include?(text)
+end
+
+def forbid_text(body, text, label, errors)
+  errors << "#{label}: contains retired or unsafe text #{text.inspect}" if body.include?(text)
+end
+
+def check_final(path, rules, errors)
+  finals = rules.select { |line| line.match?(/\A(?:FINAL|MATCH),/i) }
+  errors << "#{path}: expected exactly one final rule, at the end" unless finals.size == 1 && rules.last == finals.first
+end
+
+base_groups = groups(BASE)
+check_groups(BASE, base_groups, errors)
+check_rule_refs(BASE, base_groups + BUILT_INS, errors)
+check_final(BASE, entries(BASE, "Rule"), errors)
+
+available_modules = Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| File.basename(path, ".module") }
+selected_modules = ARGV.map { |arg| File.basename(arg, ".module") }.uniq
+(selected_modules - available_modules).each { |name| errors << "unknown selected module #{name.inspect}" }
+MODULE_CONFLICTS.each do |pair|
+  errors << "selected modules conflict: #{pair.join(" and ")}" if (pair - selected_modules).empty?
+end
+selected_groups = base_groups + (selected_modules & available_modules).flat_map do |name|
+  groups("modules/#{name}.module")
+end
+duplicate_selected_groups = selected_groups.group_by(&:itself).select { |_name, values| values.length > 1 }.keys
+errors << "selected modules define duplicate groups: #{duplicate_selected_groups.join(", ")}" unless duplicate_selected_groups.empty?
 
 Dir.glob(File.join(ROOT, "modules/*.module")).sort.each do |absolute|
   path = absolute.delete_prefix("#{ROOT}/")
-  check_policy_refs(path, base_groups + groups(path) + BUILT_INS, errors)
+  check_groups(path, base_groups + groups(path), errors)
+  check_rule_refs(path, base_groups + groups(path) + BUILT_INS, errors)
 end
 
-clash = YAML.safe_load(File.read(File.join(ROOT, "exports/clash/config.yaml")), aliases: false)
-clash_groups = clash.fetch("proxy-groups").map { |group| group.fetch("name") }
-clash_providers = clash.fetch("rule-providers").keys
-
-clash.fetch("proxy-groups").each do |group|
-  group.fetch("proxies", []).each do |policy|
-    next if (clash_groups + BUILT_INS).include?(policy)
-
-    errors << "exports/clash/config.yaml: #{group.fetch("name")} references unknown group #{policy.inspect}"
+surge_groups = groups(SURGE)
+check_groups(SURGE, surge_groups, errors)
+check_rule_refs(SURGE, surge_groups + BUILT_INS, errors)
+check_final(SURGE, entries(SURGE, "Rule"), errors)
+entries(SURGE, "Proxy Group").grep(/= url-test,/).each do |line|
+  %w[include-all-proxies=true include-other-group=PROXY].each do |source|
+    require_text(line, source, "#{SURGE}: regional node sourcing", errors)
   end
 end
 
+clash = YAML.safe_load(File.read(File.join(ROOT, CLASH)), aliases: false)
+clash_groups = clash.fetch("proxy-groups").map { |group| group.fetch("name") }
+clash_providers = clash.fetch("rule-providers").keys
+errors << "#{CLASH}: duplicate group name" unless clash_groups.uniq == clash_groups
+clash.fetch("proxy-groups").each do |group|
+  group.fetch("proxies", []).each do |member|
+    errors << "#{CLASH}: #{group.fetch("name")} references unknown group #{member.inspect}" unless (clash_groups + BUILT_INS).include?(member)
+  end
+end
 clash.fetch("rules").each do |rule|
   fields = rule.split(",").map(&:strip)
   if fields.first == "RULE-SET"
-    errors << "exports/clash/config.yaml: unknown provider #{fields[1].inspect}" unless clash_providers.include?(fields[1])
+    errors << "#{CLASH}: unknown provider #{fields[1].inspect}" unless clash_providers.include?(fields[1])
     policy = fields[2]
   else
     policy = fields.first == "MATCH" ? fields[1] : fields[2]
   end
-  errors << "exports/clash/config.yaml: unknown policy #{policy.inspect}" unless (clash_groups + BUILT_INS).include?(policy)
+  errors << "#{CLASH}: unknown policy #{policy.inspect}" unless (clash_groups + BUILT_INS).include?(policy)
 end
+check_final(CLASH, clash.fetch("rules"), errors)
 
-errors << "exports/clash/config.yaml: VPSDance must use YAML format" unless clash.dig("rule-providers", "ai-vpsdance", "format") == "yaml"
-errors << "exports/clash/config.yaml: DNS must bind to localhost" unless clash.dig("dns", "listen") == "127.0.0.1:1053"
-errors << "exports/clash/config.yaml: DNS bootstrap resolvers are missing" if clash.dig("dns", "default-nameserver").to_a.empty?
-
-qx_path = "exports/quantumultx/QuantumultX.conf"
-qx = lines(qx_path)
-qx_policies = entries(qx_path, "policy").each_with_object([]) do |line, policies|
+qx_policies = entries(QX, "policy").each_with_object([]) do |line, policies|
   next unless line.start_with?("static=", "url-latency-benchmark=")
+  policies << line.split("=", 2).last.split(",", 2).first.strip
+end
+errors << "#{QX}: duplicate policy name" unless qx_policies.uniq == qx_policies
+entries(QX, "policy").grep(/^static=/).each do |line|
+  name, *members = line.split("=", 2).last.split(",").map(&:strip)
+  members.take_while { |field| !field.include?("=") }.each do |member|
+    errors << "#{QX}: #{name.inspect} references unknown policy #{member.inspect}" unless (qx_policies + BUILT_INS).include?(member)
+  end
+end
+entries(QX, "filter_remote").each do |line|
+  policy = line[/force-policy=([^,]+)/, 1]&.strip || line[/tag=([^,]+)/, 1]&.strip
+  errors << "#{QX}: remote filter has no resolvable policy in #{line.inspect}" unless (qx_policies + BUILT_INS).include?(policy)
+end
+check_rule_refs(QX, qx_policies + BUILT_INS, errors, "filter_local")
+check_final(QX, entries(QX, "filter_local"), errors)
 
-  policies << line.split("=", 2)[1].split(",", 2).first.strip
+# Manual DIRECT choices never change the existing first/default candidate.
+[BASE, SURGE].each do |path|
+  entries(path, "Proxy Group").grep(/= select,/).each do |line|
+    errors << "#{path}: selector lacks DIRECT: #{line.split('=', 2).first}" unless group_members(line).include?("DIRECT")
+  end
+end
+clash.fetch("proxy-groups").select { |group| group["type"] == "select" && group["name"] != "PROXY" }.each do |group|
+  errors << "#{CLASH}: #{group['name']} lacks DIRECT" unless group.fetch("proxies", []).include?("DIRECT")
+end
+entries(QX, "policy").grep(/^static=/).each do |line|
+  errors << "#{QX}: selector lacks direct" unless line.split(",").map(&:strip).include?("direct")
 end
 
-entries(qx_path, "filter_remote").each do |line|
-  force = line[/force-policy=([^,]+)/, 1]&.strip
-  tag = line[/tag=([^,]+)/, 1]&.strip
-  policy = force || tag
-  errors << "#{qx_path}: remote filter has no resolvable policy in #{line.inspect}" unless (qx_policies + BUILT_INS).include?(policy)
+config_paths = [BASE, SURGE, CLASH, QX] + Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| path.delete_prefix("#{ROOT}/") }
+all_config = config_paths.to_h { |path| [path, File.read(File.join(ROOT, path))] }
+unsafe = [
+  "/Rules/Direct.list",
+  "/Rules/Reject.list",
+  "ai-proxy-rules",
+  "/Rules/AI.list",
+  "DEST-PORT,22",
+  "DOMAIN-SUFFIX,ai.com,🤖 OpenAI",
+  "host-suffix, ai.com, 🤖 OpenAI",
+  "🇨🇳 Taiwan Node"
+]
+all_config.each do |path, body|
+  unsafe.each { |text| forbid_text(body, text, path, errors) }
+  if path != "modules/adblock-aggressive.module"
+    forbid_text(body, "anti-ad.net/surge.txt", path, errors)
+  end
 end
 
-entries(qx_path, "filter_local").each do |line|
-  policy = rule_policy(line)
-  errors << "#{qx_path}: unknown local policy #{policy.inspect}" unless (qx_policies + BUILT_INS).include?(policy)
+# These upstream RULE-SET files deliberately omit their domain-only payload.
+{
+  BASE => %w[ChinaMax],
+  SURGE => %w[Apple ChinaMax],
+  "modules/adblock-core.module" => %w[Advertising],
+  "modules/adblock-lite.module" => %w[AdvertisingLite]
+}.each do |path, names|
+  rules = entries(path, "Rule")
+  names.each do |name|
+    mixed = rules.find { |line| line.start_with?("RULE-SET,") && line.include?("/#{name}/#{name}.list,") }
+    if mixed
+      companion = mixed.sub("RULE-SET,", "DOMAIN-SET,").sub("/#{name}.list,", "/#{name}_Domain.list,")
+      errors << "#{path}: missing matching DOMAIN-SET for #{name}" unless rules.include?(companion)
+    else
+      errors << "#{path}: missing RULE-SET for #{name}"
+    end
+  end
 end
+forbid_text(all_config.fetch("modules/adblock-core.module"), "/Privacy/", "Core already includes Privacy", errors)
 
-errors << "#{qx_path}: old url-test policy syntax remains" if qx.any? { |line| line.start_with?("url-test=") }
-errors << "#{qx_path}: OneDrive policy is missing" unless qx_policies.include?("OneDrive")
-errors << "#{qx_path}: PrimeVideo policy is missing" unless qx_policies.include?("PrimeVideo")
-errors << "#{qx_path}: Apple Account policy is missing" unless qx_policies.include?("Apple Account")
-errors << "#{qx_path}: DoH is not enabled" unless qx.any? { |line| line.start_with?("doh-server = https://") }
-errors << "#{qx_path}: Apple Account authentication rule is missing" unless qx.include?("host, account.apple.com, Apple Account")
-errors << "#{qx_path}: Apple certificate checks must stay direct" unless qx.include?("host, ocsp.digicert.com, direct")
-
-all_config = (["shadowrocket.conf"] + Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| path.delete_prefix("#{ROOT}/") } + %w[exports/clash/config.yaml exports/surge/Surge.conf exports/quantumultx/QuantumultX.conf]).to_h { |path| [path, File.read(File.join(ROOT, path))] }
-banned = ["Apple-Push.list", "/Advertising/Privacy.list", "/Forbidden/Forbidden.list", "sr_ad_only.conf", "carrnot/china-ip-list", "🇨🇳 Taiwan Node"]
-banned.each do |text|
-  all_config.each { |path, body| errors << "#{path}: contains retired text #{text.inspect}" if body.include?(text) }
-end
-
-main = all_config.fetch("shadowrocket.conf")
-errors << "shadowrocket.conf: Apple routing must stay in its module" if main.include?("🍎 Apple Services")
-errors << "shadowrocket.conf: Reject must precede broad AI rules" unless precedes?(main, "Rules/Reject.list", "ai-proxy-rules")
+main = all_config.fetch(BASE)
 expected_skip_proxy = "skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, captive.apple.com"
-skip_proxy_lines = main.lines.map(&:strip).grep(/^skip-proxy\s*=/)
-errors << "shadowrocket.conf: skip-proxy must contain local access only" unless skip_proxy_lines == [expected_skip_proxy]
-errors << "shadowrocket.conf: QUIC blocking must stay in the base profile" unless main.include?("block-quic = all-proxy")
+errors << "#{BASE}: skip-proxy must contain local access only" unless main.lines.map(&:strip).grep(/^skip-proxy\s*=/) == [expected_skip_proxy]
+errors << "#{BASE}: base policy must not reject traffic" if entries(BASE, "Rule").any? { |line| rule_policy(line) == "REJECT" }
+forbid_text(main, "block-quic =", BASE, errors)
+%w[stripe.com auth0.com sentry.io intercom.io api.cloudflare.com].each { |domain| forbid_text(main, domain, BASE, errors) }
+
+service_routes = {
+  "Claude.list" => "🧠 Claude",
+  "Gemini.list" => "💎 Google AI",
+  "Github.list" => "💻 Developer Services",
+  "YouTube.list" => "▶️ YouTube",
+  "Netflix.list" => "🎬 Netflix",
+  "Disney.list" => "🏰 Disney+",
+  "PrimeVideo.list" => "📦 Prime Video",
+  "HBO.list" => "📺 HBO",
+  "Bahamut.list" => "🐉 Bahamut"
+}
+service_routes.each { |source, policy| require_text(main, "#{source},#{policy}", BASE, errors) }
+require_text(main, "DOMAIN-SUFFIX,openai.com,🤖 OpenAI", BASE, errors)
+forbid_text(main, "/OpenAI/OpenAI.", BASE, errors)
+
+%w[adblock-core adblock-lite adblock-aggressive].each do |name|
+  path = "modules/#{name}.module"
+  body = all_config.fetch(path)
+  %w[token.safebrowsing.apple safebrowsing.googleapis.com safebrowsing.googleapis-cn.com safebrowsing.urlsec.qq.com].each do |domain|
+    require_text(body, "DOMAIN,#{domain},DIRECT", path, errors)
+  end
+  first_remote = entries(path, "Rule").index { |line| line.start_with?("RULE-SET,") }
+  errors << "#{path}: security allowlist must precede remote blocking" unless first_remote && first_remote >= 4
+end
 
 privacy_dns = all_config.fetch("modules/privacy-dns.module")
-privacy_dns_settings = {
+{
   "dns-server" => "https://cloudflare-dns.com/dns-query",
   "fallback-dns-server" => "https://dns.quad9.net/dns-query",
   "dns-direct-system" => "false",
   "dns-direct-fallback-proxy" => "false",
   "hijack-dns" => "*:53"
-}
-privacy_dns_settings.each do |setting, value|
-  errors << "modules/privacy-dns.module: invalid #{setting}" unless privacy_dns.lines.map(&:strip).include?("#{setting} = #{value}")
-  errors << "shadowrocket.conf: #{setting} must stay in the privacy DNS module" if main.match?(/^#{Regexp.escape(setting)}\s*=/)
+}.each do |setting, value|
+  require_text(privacy_dns, "#{setting} = #{value}", "modules/privacy-dns.module", errors)
+  errors << "#{BASE}: #{setting} must stay optional" if main.match?(/^#{Regexp.escape(setting)}\s*=/)
 end
 
 china_dns = all_config.fetch("modules/dns-mainland-china.module")
-china_dns_settings = {
-  "dns-server" => "https://dns.alidns.com/dns-query#no-h3",
-  "fallback-dns-server" => "https://doh.pub/dns-query#no-h3",
-  "dns-direct-system" => "false",
-  "dns-direct-fallback-proxy" => "false",
-  "hijack-dns" => "*:53"
+require_text(china_dns, "dns-server = https://dns.alidns.com/dns-query#no-h3", "modules/dns-mainland-china.module", errors)
+require_text(china_dns, "fallback-dns-server = https://doh.pub/dns-query#no-h3", "modules/dns-mainland-china.module", errors)
+require_text(all_config.fetch("modules/quic-compat.module"), "block-quic = all-proxy", "modules/quic-compat.module", errors)
+require_text(all_config.fetch("modules/ipv6.module"), "prefer-ipv6 = false", "modules/ipv6.module", errors)
+require_text(all_config.fetch("modules/ipv6-preferred.module"), "prefer-ipv6 = true", "modules/ipv6-preferred.module", errors)
+
+certificate_hosts = %w[certs.apple.com crl.apple.com crl3.digicert.com crl4.digicert.com ocsp.apple.com ocsp.digicert.cn ocsp.digicert.com ocsp2.apple.com valid.apple.com appattest.apple.com]
+apple_expectations = {
+  "modules/apple-account.module" => %w[account.apple.com appleid.cdn-apple.com idmsa.apple.com gsa.apple.com setup.icloud.com],
+  "modules/apple-certificate-validation.module" => certificate_hosts,
+  "modules/apple-push.module" => %w[push.apple.com push-apple.com.akadns.net],
+  "modules/apple-app-downloads.module" => %w[itunes.apple.com apps.apple.com mzstatic.com download.developer.apple.com],
+  "modules/apple-updates.module" => %w[configuration.apple.com gdmf.apple.com osrecovery.apple.com updates.cdn-apple.com],
+  "modules/apple-siri-search.module" => %w[guzzoni.apple.com smoot.apple.com],
+  "modules/apple-intelligence.module" => %w[apple-relay.apple.com apple-relay.cloudflare.com apple-relay.fastly-edge.com cp4.cloudflare.com]
 }
-china_dns_settings.each do |setting, value|
-  errors << "modules/dns-mainland-china.module: invalid #{setting}" unless china_dns.lines.map(&:strip).include?("#{setting} = #{value}")
+apple_expectations.each do |path, domains|
+  domains.each { |domain| require_text(all_config.fetch(path), domain, path, errors) }
+end
+forbid_text(all_config.fetch("modules/apple-updates.module"), "gateway.icloud.com", "modules/apple-updates.module", errors)
+%w[guzzoni.apple.com smoot.apple.com].each { |host| forbid_text(all_config.fetch("modules/apple-intelligence.module"), host, "modules/apple-intelligence.module", errors) }
+%w[apple-relay.apple.com apple-relay.cloudflare.com apple-relay.fastly-edge.com cp4.cloudflare.com].each { |host| forbid_text(all_config.fetch("modules/apple-siri-search.module"), host, "modules/apple-siri-search.module", errors) }
+
+certificate_rule_sets = {
+  "modules/apple-certificate-validation.module" => entries("modules/apple-certificate-validation.module", "Rule"),
+  SURGE => entries(SURGE, "Rule"),
+  CLASH => clash.fetch("rules"),
+  QX => entries(QX, "filter_local")
+}
+certificate_rule_sets.each do |path, rules|
+  certificate_hosts.each do |host|
+    matches = rules.map { |rule| rule.split(",").map(&:strip) }.select { |fields| fields[1] == host }
+    errors << "#{path}: missing direct certificate rule for #{host}" if matches.empty?
+    errors << "#{path}: certificate rule for #{host} must use DIRECT" unless matches.all? { |fields| fields[2]&.casecmp("DIRECT")&.zero? }
+  end
 end
 
-private_ip = all_config.fetch("modules/private-ip-block.module")
-errors << "modules/private-ip-block.module: private DNS answers must be rejected" unless private_ip.include?("private-ip-answer = false")
-errors << "shadowrocket.conf: private-ip-answer must stay in its module" if main.match?(/^private-ip-answer\s*=/)
+siri_group_lines = {
+  "modules/apple-siri-search.module" => entries("modules/apple-siri-search.module", "Proxy Group").find { |line| line.start_with?("🗣️ Siri & Search") },
+  SURGE => entries(SURGE, "Proxy Group").find { |line| line.start_with?("🗣️ Siri & Search") },
+  QX => entries(QX, "policy").find { |line| line.start_with?("static=🗣️ Siri & Search") }
+}
+siri_group_lines.each do |path, line|
+  errors << "#{path}: Siri & Search must default to DIRECT" unless line && group_members(line).first&.casecmp("DIRECT")&.zero?
+end
+clash_siri = clash.fetch("proxy-groups").find { |group| group.fetch("name") == "🗣️ Siri & Search" }
+errors << "#{CLASH}: Siri & Search must default to DIRECT" unless clash_siri&.fetch("proxies", [])&.first == "DIRECT"
 
-real_ip = all_config.fetch("modules/real-ip-compat.module")
-errors << "modules/real-ip-compat.module: always-real-ip is missing" unless real_ip.match?(/^always-real-ip\s*=/)
-errors << "shadowrocket.conf: always-real-ip must stay in its module" if main.match?(/^always-real-ip\s*=/)
-errors << "modules/real-ip-compat.module: Apple exceptions belong in the Apple module" if real_ip.match?(/apple|icloud|cp4\.cloudflare/i)
+targeted = all_config.fetch("modules/back-to-cn.module")
+all_cn = all_config.fetch("modules/back-to-cn-all.module")
+%w[WeChat AliPay BiliBili NetEaseMusic ChinaMedia].each { |source| require_text(targeted, "/#{source}/#{source}.list", "modules/back-to-cn.module", errors) }
+forbid_text(targeted, "ChinaIPs.list", "modules/back-to-cn.module", errors)
+require_text(all_cn, "china-domain-list", "modules/back-to-cn-all.module", errors)
+require_text(all_cn, "ChinaIPs.list", "modules/back-to-cn-all.module", errors)
 
-apple = all_config.fetch("modules/apple-services.module")
-errors << "modules/apple-services.module: AppleCN source is missing" unless apple.include?("Rules/AppleCN.list")
-errors << "modules/apple-services.module: AppleServers source is missing" unless apple.include?("Rules/AppleServers.list")
-errors << "modules/apple-services.module: narrow Apple rules must stay in separate modules" if apple.match?(/^(?:DOMAIN(?:-SUFFIX|-KEYWORD|-WILDCARD)?|IP-CIDR6?),/)
-errors << "modules/apple-services.module: App Store host override must stay separate" if apple.include?("iosapps.itunes.apple.com =")
-
-apple_account = all_config.fetch("modules/apple-account.module")
-%w[account.apple.com appleid.cdn-apple.com idmsa.apple.com gsa.apple.com setup.icloud.com].each do |domain|
-  errors << "modules/apple-account.module: missing #{domain}" unless apple_account.include?(domain)
+common_groups = service_routes.values + ["📲 Apple App Downloads", "🍏 Apple Updates", "🗣️ Siri & Search", "🧠 Apple PCC", "🔔 Apple Push", "🔐 Apple Account", "🍎 Apple Services"]
+common_groups << "🤖 OpenAI"
+{ SURGE => surge_groups, CLASH => clash_groups, QX => qx_policies }.each do |path, known|
+  common_groups.each { |group| errors << "#{path}: missing policy #{group.inspect}" unless known.include?(group) }
 end
 
-apple_certificates = all_config.fetch("modules/apple-certificate-validation.module")
-%w[certs.apple.com crl.apple.com crl3.digicert.com crl4.digicert.com ocsp.apple.com ocsp.digicert.cn ocsp.digicert.com ocsp2.apple.com valid.apple.com appattest.apple.com].each do |domain|
-  errors << "modules/apple-certificate-validation.module: missing #{domain}" unless apple_certificates.include?(domain)
-end
-errors << "modules/apple-certificate-validation.module: certificate checks must stay direct" if entries("modules/apple-certificate-validation.module", "Rule").any? { |line| rule_policy(line) != "DIRECT" }
-
-apple_push = all_config.fetch("modules/apple-push.module")
-%w[push.apple.com push-apple.com.akadns.net].each do |domain|
-  errors << "modules/apple-push.module: missing #{domain}" unless apple_push.include?(domain)
-end
-
-apple_updates = all_config.fetch("modules/apple-updates.module")
-%w[gateway.icloud.com gdmf.apple.com swscan.apple.com updates.cdn-apple.com].each do |domain|
-  errors << "modules/apple-updates.module: missing #{domain}" unless apple_updates.include?(domain)
-end
-
-apple_intelligence = all_config.fetch("modules/apple-intelligence.module")
-%w[guzzoni.apple.com smoot.apple.com apple-relay.cloudflare.com apple-relay.fastly-edge.com cp4.cloudflare.com apple-relay.apple.com].each do |domain|
-  errors << "modules/apple-intelligence.module: missing #{domain}" unless apple_intelligence.include?(domain)
-end
-
-apple_cdn = all_config.fetch("modules/apple-app-store-cdn.module")
-errors << "modules/apple-app-store-cdn.module: Kingsoft host override is missing" unless apple_cdn.include?("iosapps.itunes.apple.com = iosapps.itunes.apple.com.download.ks-cdn.com")
-
-%w[gateway.icloud.com apple-relay.cloudflare.com cp4.cloudflare.com apple-relay.fastly-edge.com gdmf.apple.com swscan.apple.com sequoia.siri.apple.com sequoia.apple.com iosapps.itunes.apple.com account.apple.com idmsa.apple.com gsa.apple.com].each do |domain|
-  errors << "shadowrocket.conf: #{domain} must stay in the Apple module" if main.include?(domain)
+{
+  SURGE => {
+    "DOMAIN,guzzoni.apple.com,🗣️ Siri & Search" => "Siri",
+    "DOMAIN,apple-relay.apple.com,🧠 Apple PCC" => "Apple Intelligence",
+    "DOMAIN,configuration.apple.com,🍏 Apple Updates" => "updates",
+    "DOMAIN-SUFFIX,itunes.apple.com,📲 Apple App Downloads" => "downloads"
+  },
+  CLASH => {
+    "DOMAIN,guzzoni.apple.com,🗣️ Siri & Search" => "Siri",
+    "DOMAIN,apple-relay.apple.com,🧠 Apple PCC" => "Apple Intelligence",
+    "DOMAIN,configuration.apple.com,🍏 Apple Updates" => "updates",
+    "DOMAIN-SUFFIX,itunes.apple.com,📲 Apple App Downloads" => "downloads"
+  },
+  QX => {
+    "host, guzzoni.apple.com, 🗣️ Siri & Search" => "Siri",
+    "host, apple-relay.apple.com, 🧠 Apple PCC" => "Apple Intelligence",
+    "host, configuration.apple.com, 🍏 Apple Updates" => "updates",
+    "host-suffix, itunes.apple.com, 📲 Apple App Downloads" => "downloads"
+  }
+}.each do |path, checks|
+  checks.each_key { |text| require_text(all_config.fetch(path), text, path, errors) }
 end
 
-china_compat = all_config.fetch("modules/china-app-tun-compat.module")
-errors << "modules/china-app-tun-compat.module: extended skip-proxy list is missing" unless china_compat.include?("passenger.t3go.cn") && china_compat.include?(expected_skip_proxy.delete_prefix("skip-proxy = "))
+require_text(clash.dig("dns", "nameserver").to_a.join(" "), "dns.quad9.net", CLASH, errors)
+require_text(all_config.fetch(SURGE), "encrypted-dns-server = https://1.1.1.1/dns-query, https://dns.quad9.net/dns-query", SURGE, errors)
+require_text(all_config.fetch(QX), "doh-server = https://1.1.1.1/dns-query, https://dns.quad9.net/dns-query", QX, errors)
+errors << "#{CLASH}: DNS must bind to localhost" unless clash.dig("dns", "listen") == "127.0.0.1:1053"
+errors << "#{QX}: excluded routes need CIDR masks" unless all_config.fetch(QX).include?("excluded_routes = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.0/8, 100.64.0.0/10")
 
-ipv6 = all_config.fetch("modules/ipv6.module")
-errors << "modules/ipv6.module: IPv6 settings are incomplete" unless ipv6.include?("ipv6 = true") && ipv6.include?("prefer-ipv6 = true")
+# Check any repository revision, not just a blacklist of familiar branch names.
+config_paths.each do |path|
+  lines(path).each do |line|
+    next if line.strip.start_with?("#", ";", "//", "update-url =")
+    line.scan(%r{https://[^\s,"']+}).each do |url|
+      uri = URI(url)
+      revision = case uri.host
+                 when "raw.githubusercontent.com" then uri.path.split("/")[3]
+                 when "github.com" then uri.path[%r{\A/[^/]+/[^/]+/raw/(?:refs/heads/)?([^/]+)}, 1]
+                 when "cdn.jsdelivr.net" then uri.path[%r{\A/gh/[^/]+/[^/@]+@([^/]+)}, 1]
+                 else next
+                 end
+      errors << "#{path}: source must use a full commit ID: #{url}" unless revision&.match?(/\A[0-9a-f]{40}\z/)
+    end
+  end
+end
 
 readme = File.read(File.join(ROOT, "README.md"))
 Dir.glob(File.join(ROOT, "modules/*.module")).sort.each do |absolute|
   filename = File.basename(absolute)
-  raw_url = "https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/#{filename}"
-  cdn_url = "https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/#{filename}"
-  errors << "README.md: missing raw URL for #{filename}" unless readme.include?(raw_url)
-  errors << "README.md: missing jsDelivr URL for #{filename}" unless readme.include?(cdn_url)
+  require_text(readme, "modules/#{filename}", "README.md", errors)
+  require_text(readme, "https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/#{filename}", "README.md", errors)
+  require_text(readme, "https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/#{filename}", "README.md", errors)
 end
-
-surge = all_config.fetch("exports/surge/Surge.conf")
-errors << "exports/surge/Surge.conf: Reject must precede broad AI rules" unless precedes?(surge, "Rules/Reject.list", "ai-proxy-rules")
-errors << "exports/surge/Surge.conf: Apple Account must precede broad Apple lists" unless precedes?(surge, "account.apple.com,🔐 Apple Account", "rule/Surge/Apple/Apple.list")
-errors << "exports/surge/Surge.conf: Apple service overrides must use the selectable group" unless surge.include?("gateway.icloud.com,🍎 Apple Services")
-errors << "exports/surge/Surge.conf: App Store CDN override must remain optional" if surge.include?("iosapps.itunes.apple.com =")
-
-clash_rules = clash.fetch("rules")
-errors << "exports/clash/config.yaml: ads must precede broad AI rules" unless clash_rules.index("RULE-SET,ads,REJECT") < clash_rules.index("RULE-SET,ai-vpsdance,🤖 AI")
-errors << "exports/clash/config.yaml: Apple Account must precede broad Apple lists" unless clash_rules.index("DOMAIN,account.apple.com,🔐 Apple Account") < clash_rules.index("RULE-SET,apple,🍎 Apple Services")
-errors << "exports/clash/config.yaml: Apple service overrides must use the selectable group" unless clash_rules.include?("DOMAIN-SUFFIX,gateway.icloud.com,🍎 Apple Services")
-
-errors << "#{qx_path}: ad filters must precede AI filters" unless precedes?(all_config.fetch(qx_path), "/Advertising/Advertising.list", "/OpenAI/OpenAI.list")
-errors << "#{qx_path}: excluded routes need CIDR masks" unless all_config.fetch(qx_path).include?("excluded_routes = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.0/8, 100.64.0.0/10")
+recipes = File.read(File.join(ROOT, "docs/recipes.md"))
+MODULE_CONFLICTS.each do |pair|
+  pair.each { |name| require_text(recipes, name, "docs/recipes.md", errors) }
+end
 
 if errors.empty?
   puts "All config checks passed."
 else
-  warn errors.join("\n")
+  warn errors.uniq.join("\n")
   exit 1
 end

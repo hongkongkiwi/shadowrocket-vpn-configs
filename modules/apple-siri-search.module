@@ -1,0 +1,10 @@
+#!name = Andy Apple — Siri and Search
+#!desc = Routes Siri, dictation, Spotlight, Lookup, Safari, News, Messages, and Music search separately from Private Cloud Compute.
+#!category = Apple
+
+[Proxy Group]
+🗣️ Siri & Search = select,DIRECT,PROXY,🇭🇰 Hong Kong Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,🇺🇸 US Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+DOMAIN,guzzoni.apple.com,🗣️ Siri & Search
+DOMAIN-SUFFIX,smoot.apple.com,🗣️ Siri & Search

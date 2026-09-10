@@ -2,11 +2,15 @@
 #!desc = Core ad/tracker blocking (mainstream, low false-positive risk). Toggle on/off in Modules.
 #!category = Adblock
 
-# Order inside a module doesn't matter much (module rules all outrank config rules),
-# but blackmatrix7 Advertising is the safest big list. URL-REGEX entries need MITM+ decryption.
+# First match wins: keep security exceptions above blocking sources.
+# HTTPS URL-REGEX entries need MITM; this module does not enable TLS decryption.
 
 [Rule]
-# blackmatrix7 Advertising — ~280k domains, Shadowrocket-native, updated daily
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Advertising/Advertising.list,REJECT
-# blackmatrix7 Privacy — tracking/analytics endpoints
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Privacy/Privacy.list,REJECT
+# Keep browser and OS phishing protection reachable if an upstream ad list changes.
+DOMAIN,token.safebrowsing.apple,DIRECT
+DOMAIN,safebrowsing.googleapis.com,DIRECT
+DOMAIN,safebrowsing.googleapis-cn.com,DIRECT
+DOMAIN,safebrowsing.urlsec.qq.com,DIRECT
+# Pinned Advertising snapshot includes Privacy; both file formats are required.
+DOMAIN-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Advertising/Advertising_Domain.list,REJECT
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Advertising/Advertising.list,REJECT
