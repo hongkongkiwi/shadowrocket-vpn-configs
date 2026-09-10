@@ -124,15 +124,42 @@ banned.each do |text|
 end
 
 main = all_config.fetch("shadowrocket.conf")
-errors << "shadowrocket.conf: private DNS answers must not be accepted" unless main.include?("private-ip-answer = false")
 errors << "shadowrocket.conf: Apple routing must stay in its module" if main.include?("🍎 Apple Services")
 errors << "shadowrocket.conf: Reject must precede broad AI rules" unless precedes?(main, "Rules/Reject.list", "ai-proxy-rules")
-errors << "shadowrocket.conf: full RFC1918 LAN range is missing" unless main.include?("skip-proxy = 192.168.0.0/16")
+expected_skip_proxy = "skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, captive.apple.com"
+skip_proxy_lines = main.lines.map(&:strip).grep(/^skip-proxy\s*=/)
+errors << "shadowrocket.conf: skip-proxy must contain local access only" unless skip_proxy_lines == [expected_skip_proxy]
+errors << "shadowrocket.conf: QUIC blocking must stay in the base profile" unless main.include?("block-quic = all-proxy")
+
+privacy_dns = all_config.fetch("modules/privacy-dns.module")
+privacy_dns_settings = {
+  "dns-server" => "https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query",
+  "fallback-dns-server" => "https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query",
+  "dns-direct-system" => "false",
+  "dns-direct-fallback-proxy" => "false",
+  "hijack-dns" => "*:53"
+}
+privacy_dns_settings.each do |setting, value|
+  errors << "modules/privacy-dns.module: invalid #{setting}" unless privacy_dns.lines.map(&:strip).include?("#{setting} = #{value}")
+  errors << "shadowrocket.conf: #{setting} must stay in the privacy DNS module" if main.match?(/^#{Regexp.escape(setting)}\s*=/)
+end
+
+private_ip = all_config.fetch("modules/private-ip-block.module")
+errors << "modules/private-ip-block.module: private DNS answers must be rejected" unless private_ip.include?("private-ip-answer = false")
+errors << "shadowrocket.conf: private-ip-answer must stay in its module" if main.match?(/^private-ip-answer\s*=/)
+
+real_ip = all_config.fetch("modules/real-ip-compat.module")
+errors << "modules/real-ip-compat.module: always-real-ip is missing" unless real_ip.match?(/^always-real-ip\s*=/)
+errors << "shadowrocket.conf: always-real-ip must stay in its module" if main.match?(/^always-real-ip\s*=/)
+errors << "modules/real-ip-compat.module: Apple exceptions belong in the Apple module" if real_ip.match?(/apple|icloud|cp4\.cloudflare/i)
 
 apple = all_config.fetch("modules/apple-services.module")
 first_apple_list = apple.index("RULE-SET")
 %w[gateway.icloud.com swscan.apple.com].each do |domain|
   errors << "modules/apple-services.module: #{domain} must precede broad Apple lists" unless apple.index(domain) < first_apple_list
+end
+%w[gateway.icloud.com apple-relay.cloudflare.com cp4.cloudflare.com apple-relay.fastly-edge.com gdmf.apple.com swscan.apple.com sequoia.siri.apple.com sequoia.apple.com iosapps.itunes.apple.com].each do |domain|
+  errors << "shadowrocket.conf: #{domain} must stay in the Apple module" if main.include?(domain)
 end
 
 surge = all_config.fetch("exports/surge/Surge.conf")

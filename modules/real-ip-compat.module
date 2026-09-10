@@ -1,0 +1,6 @@
+#!name = Andy Compatibility — Real IP
+#!desc = Returns real DNS answers for connectivity checks, game consoles, and carrier login endpoints that can fail with fake IP. Enable only when needed.
+#!category = Compatibility
+
+[General]
+always-real-ip = lancache.steamcontent.com, *.msftconnecttest.com, *.msftncsi.com, *.srv.nintendo.net, *.stun.playstation.net, xbox.*.microsoft.com, *.xboxlive.com, *.logon.battlenet.com.cn, *.logon.battle.net, stun.l.google.com, *.lan, *.direct, *.cmpassport.com, id6.me, open.e.189.cn, mdn.open.wo.cn, opencloud.wostore.cn, auth.wosms.cn, *.10099.com.cn

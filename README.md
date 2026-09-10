@@ -27,7 +27,9 @@ shadowrocket-vpn-configs/
 │   ├── adblock-aggressive.module
 │   ├── apple-services.module
 │   ├── httpdns-block.module
+│   ├── privacy-dns.module
 │   ├── private-ip-block.module
+│   ├── real-ip-compat.module
 │   └── back-to-cn.module
 ├── scripts/validate_configs.rb
 ├── .github/workflows/validate.yml
@@ -52,9 +54,10 @@ Its rule order is intended to work like this:
 3. Chinese domains use ChinaMax and then `GEOIP,CN` for direct access.
 4. `FINAL` sends unmatched traffic to the fallback group.
 
-Traffic listed in `skip-proxy` bypasses the proxy engine. This includes local
-addresses, captive-portal checks, selected carrier endpoints, and selected bank
-sites. Review that list before using the profile on an untrusted network.
+Traffic listed in `skip-proxy` bypasses the proxy engine. The base list now has
+only RFC1918 addresses, loopback, `.local`, and Apple's captive-portal check.
+Public carrier, bank, Baidu, and Crashlytics exceptions were removed because
+they skipped routing and rejection rules entirely.
 
 ## Shadowrocket setup
 
@@ -113,7 +116,9 @@ Import each module by URL, then order and toggle it under Config → Modules.
 | [`adblock-lite`](modules/adblock-lite.module) | Smaller advertising list | Use instead of Core on slower devices | Source URL returned 200 |
 | [`adblock-aggressive`](modules/adblock-aggressive.module) | Larger China-focused anti-AD list | Add only after Core works without false positives | Native list URL returned 200 |
 | [`apple-services`](modules/apple-services.module) | Keep Apple services and software updates direct; apply the App Store CDN alias | Enable for the repository's preferred Apple routing; disable to use normal profile routing | Native Apple lists returned 200; exact direct rules run first |
-| [`private-ip-block`](modules/private-ip-block.module) | Force domains with private DNS answers through the proxy | Useful with other profiles; the main profile already sets the same option | No remote dependency |
+| [`privacy-dns`](modules/privacy-dns.module) | Use Cloudflare and AliDNS over HTTPS; intercept port 53 | Enable for encrypted DNS; disable on filtered networks and captive portals | No remote rule dependency |
+| [`private-ip-block`](modules/private-ip-block.module) | Force domains with private DNS answers through the proxy | Enable with Privacy DNS; disable for split DNS or private services | No remote dependency |
+| [`real-ip-compat`](modules/real-ip-compat.module) | Return real DNS answers for selected connectivity, gaming, and carrier hosts | Leave off unless an affected app or console fails under fake-IP DNS | No remote dependency |
 | [`back-to-cn`](modules/back-to-cn.module) | Route Chinese domains and IPs through a return-to-China node | Use only while outside mainland China | Domain and native IP-CIDR list URLs returned 200 |
 
 Raw module URLs:
@@ -124,7 +129,9 @@ https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/mod
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-lite.module
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/adblock-aggressive.module
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-services.module
+https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/privacy-dns.module
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/private-ip-block.module
+https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/real-ip-compat.module
 https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/back-to-cn.module
 ```
 
@@ -135,19 +142,20 @@ not override a rejection.
 
 ## DNS and network behavior
 
-The Shadowrocket profile uses Cloudflare and AliDNS over HTTPS for both primary
-and fallback resolution. It has no system or plaintext fallback. DNS will fail
-on a network that blocks both resolvers, so keep a known-good local profile if
-you travel through networks with strict resolver filtering.
+The base profile leaves DNS transport, port 53 interception, private-answer
+handling, and real-IP exceptions to Shadowrocket. Enable `privacy-dns` for
+Cloudflare and AliDNS over HTTPS with no system or plaintext fallback. DNS will
+fail if a network blocks both resolvers, so disable the module during captive
+portal sign-in or on a filtered network.
 
 Other current choices:
 
 - IPv6 is disabled.
-- Port 53 DNS is hijacked into Shadowrocket.
 - QUIC is blocked for proxied traffic so affected clients can retry over TCP.
-- `private-ip-answer = false` treats unexpected private answers as DNS
-  hijacking and forces those domains through the proxy. Set it to `true` if a
-  trusted split-DNS or private service stops resolving.
+- `private-ip-block` treats unexpected private answers as DNS hijacking and
+  forces those domains through the proxy.
+- `real-ip-compat` bypasses fake-IP DNS for a short list of hosts that inspect
+  addresses directly. Its list contains no Apple entries.
 - The Apple module maps `iosapps.itunes.apple.com` to a Kingsoft CDN alias.
 - TUN exclusions cover RFC1918, loopback, link-local, documentation, multicast,
   and selected discovery ranges.
@@ -184,6 +192,9 @@ The 2026-09-10 repair pass produced these results:
   stays rejected.
 - Apple direct exceptions precede the broad Apple sources. Shadowrocket keeps
   the full Apple block in `apple-services.module` so it can be disabled.
+- Strict DNS, private-answer blocking, and real-IP exceptions stay outside the
+  base profile and can be enabled separately.
+- `skip-proxy` contains local access and captive-portal detection only.
 - Quantumult X now uses `url-latency-benchmark`, forces ad and LAN/China policy
   outcomes, enables DoH, and includes OneDrive plus Prime Video.
 - Taiwan selectors use the Taiwan flag and no longer match `🇨🇳`.

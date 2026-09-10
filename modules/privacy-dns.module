@@ -1,0 +1,10 @@
+#!name = Andy Privacy — Encrypted DNS
+#!desc = Uses Cloudflare and AliDNS over HTTPS and intercepts port 53. Disable on captive portals or networks that block both resolvers.
+#!category = Privacy
+
+[General]
+dns-server = https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query
+fallback-dns-server = https://1.1.1.1/dns-query, https://dns.alidns.com/dns-query
+dns-direct-system = false
+dns-direct-fallback-proxy = false
+hijack-dns = *:53
