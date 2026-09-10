@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require "fileutils"
+require "ipaddr"
 require "open3"
 require "tmpdir"
 
@@ -14,6 +15,15 @@ check = lambda do |directory, modules, expected_error = nil|
 end
 
 check.call(root, [])
+default_config = File.read(File.join(root, "default.conf"))
+local_ranges = default_config[/^tun-excluded-routes = (.+)$/, 1].split(",").map { |cidr| IPAddr.new(cidr.strip) }
+%w[192.168.1.1 224.0.0.251 239.255.255.250 255.255.255.255 ff02::fb ff02::c].each do |address|
+  abort "Default profile captures LAN/discovery address #{address}" unless local_ranges.any? { |range| range.include?(address) }
+end
+%w[1.1.1.1 2606:4700:4700::1111].each do |address|
+  abort "Default profile bypasses public address #{address}" if local_ranges.any? { |range| range.include?(address) }
+end
+checks += 1
 check.call(root, %w[adblock-core adblock-aggressive privacy-dns apple-account apple-services soul-ktv back-to-cn ipv6])
 check.call(root, %w[apple-services apple-app-store-cdn]) # Host alias has no rule-order dependency.
 check.call(root, %w[adblock-core security-dns bulk-downloads regional-streaming network-diagnostics back-to-cn])

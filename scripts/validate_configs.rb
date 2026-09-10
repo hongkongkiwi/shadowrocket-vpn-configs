@@ -142,7 +142,7 @@ expected_default_general = [
   "bypass-system = true",
   "udp-policy-not-supported-behaviour = REJECT",
   "skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, 127.0.0.1, localhost, *.local, captive.apple.com",
-  "tun-excluded-routes = 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, ::1/128, fc00::/7, fe80::/10",
+  "tun-excluded-routes = 10.0.0.0/8, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.168.0.0/16, 224.0.0.0/4, 255.255.255.255/32, ::1/128, fc00::/7, fe80::/10, ff02::/16",
   "update-url = https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/default.conf"
 ]
 errors << "#{default_path}: unexpected General settings" unless entries(default_path, "General") == expected_default_general
