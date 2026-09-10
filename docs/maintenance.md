@@ -15,6 +15,20 @@ ruby scripts/validate_soul_module.rb
 ruby scripts/audit_remote_sources.rb --self-test
 ```
 
+Install the local Git hooks once per clone (Ruby and Lefthook are required):
+
+```sh
+brew install lefthook # If not already installed.
+lefthook install
+```
+
+Pre-commit checks staged whitespace and validates the working-tree configs and
+Soul module. Pre-push runs all four offline checks above and blocks pushes whose
+destination is `main` or `master`; push a feature branch and open a PR. Config
+checks read the working tree, so stage the validated config changes together.
+Remote downloads stay in the manual/weekly source audit. CI runs the offline
+checks even when local hooks aren't installed.
+
 To check a stack, pass module names in top-to-bottom order, for example
 `ruby scripts/validate_configs.rb adblock-core privacy-dns apple-account apple-services`.
 This rejects conflicting variants, Aggressive without Core, broad Apple rules
