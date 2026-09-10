@@ -28,13 +28,16 @@ The placeholder itself sends traffic directly, and a region without matching
 nodes remains unusable. A country label does not verify an exit IP.
 
 Every service selector offers `DIRECT` for local access, including Hong Kong.
-Siri starts on `DIRECT`; PCC starts on the US group. The other proxy defaults
-are unchanged. This does not automatically switch settings when you travel.
+Siri starts on `DIRECT`; PCC and all AI provider selectors start on the US
+group, matching the base profile. A fresh import requires matching US nodes or
+a manual selection. This does not automatically switch settings when you travel.
 
 ## Parity and exceptions
 
 The exports use the canonical policy groups `🤖 OpenAI`, `🧠 Claude`,
-`💎 Google AI`, `💻 Developer Services`, and separate streaming groups for
+`💎 Google AI`, `🧑‍💻 GitHub Copilot`, `🪟 Microsoft Copilot`, `🖱️ Cursor`,
+`🔍 Perplexity`, `𝕏 xAI / Grok`, `🤗 Hugging Face`, `🏄 Windsurf`,
+`🧠 JetBrains AI`, `💻 Developer Services`, and separate streaming groups for
 `▶️ YouTube`, `🎬 Netflix`, `🏰 Disney+`, `📦 Prime Video`, `📺 HBO`, and
 `🐉 Bahamut`. Shared dependencies stay outside provider AI selectors.
 
@@ -68,3 +71,21 @@ Vendor references: [mihomo rule providers](https://wiki.metacubex.one/en/config/
 [mihomo proxy groups](https://wiki.metacubex.one/en/config/proxy-groups/),
 [Surge rule sets](https://manual.nssurge.com/rules/ruleset.html), and
 [Quantumult X sample configuration](https://github.com/crossutility/Quantumult-X/blob/master/sample.conf).
+
+## Optional modules and security DNS
+
+The new bulk-download, HK/TW/JP streaming, and diagnostics overlays are
+Shadowrocket modules. They are not enabled in these exports. The AI provider
+routes are included in every export. Port an optional overlay only when using
+it, with the target client's syntax and policies; do not import `.module`
+files into other clients as if they were native resources.
+
+For the security-DNS equivalent, replace the standard Cloudflare DoH URL in
+Surge's `encrypted-dns-server`, Quantumult X's `doh-server`, or mihomo's
+`dns.nameserver` with `https://security.cloudflare-dns.com/dns-query`, retaining
+`https://dns.quad9.net/dns-query` as the other encrypted resolver. Remove any
+other unfiltered resolver from the active answer pool. Preserve native
+bootstrap settings needed to resolve the DoH hostname; bootstrap is distinct
+from the resolver answering application queries. These are manual DNS
+substitutions, not an automatically enabled security profile. Check the
+client's effective resolver configuration after import.

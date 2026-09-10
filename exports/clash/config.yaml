@@ -1,5 +1,5 @@
 # mihomo / Clash.Meta / Clash Verge Rev / Stash config
-# Mirror of shadowrocket.conf — same groups, same rule sources.
+# Port of shadowrocket.conf routing intent using mihomo provider formats.
 # Rule sources: blackmatrix7 (Clash yaml payload format) + MetaCubeX meta-rules-dat (.mrs binaries).
 # Merge this file with the profile that supplies your proxies. Separate profile cards
 # do not combine nodes, groups, providers, or rules.
@@ -79,13 +79,37 @@ proxy-groups:
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🤖 OpenAI"
     type: select
-    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🧠 Claude"
     type: select
-    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "💎 Google AI"
     type: select
-    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🧑‍💻 GitHub Copilot"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🪟 Microsoft Copilot"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🖱️ Cursor"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🔍 Perplexity"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "𝕏 xAI / Grok"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🤗 Hugging Face"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🏄 Windsurf"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
+  - name: "🧠 JetBrains AI"
+    type: select
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "💻 Developer Services"
     type: select
     proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
@@ -355,6 +379,38 @@ rule-providers:
 
 rules:
   # AI
+  # Provider sources and review notes: docs/rule-sources.md
+  - DOMAIN-SUFFIX,githubcopilot.com,🧑‍💻 GitHub Copilot
+  - DOMAIN,copilot-proxy.githubusercontent.com,🧑‍💻 GitHub Copilot
+  - DOMAIN,copilot-workspace.githubnext.com,🧑‍💻 GitHub Copilot
+  - DOMAIN,origin-tracker.githubusercontent.com,🧑‍💻 GitHub Copilot
+  - DOMAIN,copilotprodattachments.blob.core.windows.net,🧑‍💻 GitHub Copilot
+  - DOMAIN-SUFFIX,copilot.com,🪟 Microsoft Copilot
+  - DOMAIN-SUFFIX,copilot.microsoft.com,🪟 Microsoft Copilot
+  - DOMAIN-SUFFIX,copilot.cloud.microsoft,🪟 Microsoft Copilot
+  - DOMAIN-SUFFIX,cursor-cdn.com,🖱️ Cursor
+  - DOMAIN-SUFFIX,cursor.com,🖱️ Cursor
+  - DOMAIN-SUFFIX,cursor.sh,🖱️ Cursor
+  - DOMAIN-SUFFIX,cursorapi.com,🖱️ Cursor
+  - DOMAIN-SUFFIX,perplexity.ai,🔍 Perplexity
+  - DOMAIN-SUFFIX,perplexity.com,🔍 Perplexity
+  - DOMAIN-SUFFIX,pplx.ai,🔍 Perplexity
+  - DOMAIN,ppl-ai-file-upload.s3.amazonaws.com,🔍 Perplexity
+  - DOMAIN,pplx-res.cloudinary.com,🔍 Perplexity
+  - DOMAIN-SUFFIX,grok.com,𝕏 xAI / Grok
+  - DOMAIN-SUFFIX,grok.x.com,𝕏 xAI / Grok
+  - DOMAIN-SUFFIX,grokipedia.com,𝕏 xAI / Grok
+  - DOMAIN-SUFFIX,x.ai,𝕏 xAI / Grok
+  - DOMAIN-SUFFIX,hf.co,🤗 Hugging Face
+  - DOMAIN-SUFFIX,hf.space,🤗 Hugging Face
+  - DOMAIN-SUFFIX,huggingface.co,🤗 Hugging Face
+  - DOMAIN-SUFFIX,codeium.com,🏄 Windsurf
+  - DOMAIN-SUFFIX,codeiumdata.com,🏄 Windsurf
+  - DOMAIN-SUFFIX,windsurf.build,🏄 Windsurf
+  - DOMAIN-SUFFIX,windsurf.com,🏄 Windsurf
+  - DOMAIN-SUFFIX,grazie.ai,🧠 JetBrains AI
+  - DOMAIN-SUFFIX,grazie.aws.intellij.net,🧠 JetBrains AI
+  - DOMAIN-SUFFIX,jetbrains.ai,🧠 JetBrains AI
   - DOMAIN,chat.openai.com.cdn.cloudflare.net,🤖 OpenAI
   - DOMAIN,openai-api.arkoselabs.com,🤖 OpenAI
   - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net,🤖 OpenAI

@@ -1,0 +1,13 @@
+#!name = Andy Network — Diagnostics
+#!desc = Routes narrow Ookla speed test hosts through a selectable policy, defaulting to PROXY. Third-party test server domains are not all captured, so check the chosen server hostname. Fast.com remains covered by the existing Netflix route.
+#!category = Diagnostics
+
+[Proxy Group]
+📶 Network Diagnostics = select,PROXY,DIRECT,🇭🇰 Hong Kong Node,🇺🇸 US Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+# Narrow domains from the reviewed source snapshots:
+# https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/Speedtest/Speedtest.list
+# https://ruleset.skk.moe/List/domainset/speedtest.conf
+DOMAIN-SUFFIX,speedtest.net,📶 Network Diagnostics
+DOMAIN-SUFFIX,ooklaserver.net,📶 Network Diagnostics

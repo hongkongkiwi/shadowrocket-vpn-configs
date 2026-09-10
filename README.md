@@ -31,6 +31,7 @@ For rollback, use a commit-pinned URL described in
 - [`docs/maintenance.md`](docs/maintenance.md): source edits, parity work,
   validation, and native test records.
 - [`exports/README.md`](exports/README.md): importing each client export.
+- [`docs/rule-sources.md`](docs/rule-sources.md): source lineage and reviewed inline-rule boundaries.
 
 ## Module index
 
@@ -55,6 +56,10 @@ currently in `modules/`; update it when a new module is added.
 | [`apple-updates`](modules/apple-updates.module) | Apple update downloads | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/apple-updates.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/apple-updates.module) |
 | [`back-to-cn`](modules/back-to-cn.module) | Selected mainland apps through a mainland exit | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/back-to-cn.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/back-to-cn.module) |
 | [`back-to-cn-all`](modules/back-to-cn-all.module) | All China domains and IPs through a mainland exit | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/back-to-cn-all.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/back-to-cn-all.module) |
+| [`bulk-downloads`](modules/bulk-downloads.module) | Selected game, package, and software downloads | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/bulk-downloads.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/bulk-downloads.module) |
+| [`regional-streaming`](modules/regional-streaming.module) | Optional HK, TW, and JP streaming routes | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/regional-streaming.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/regional-streaming.module) |
+| [`security-dns`](modules/security-dns.module) | Threat-filtering Cloudflare and Quad9 DoH; alternative to Privacy DNS | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/security-dns.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/security-dns.module) |
+| [`network-diagnostics`](modules/network-diagnostics.module) | Selected Ookla hosts; Fast.com keeps its Netflix route | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/network-diagnostics.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/network-diagnostics.module) |
 | [`china-app-tun-compat`](modules/china-app-tun-compat.module) | Optional mainland app TUN exclusions | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/china-app-tun-compat.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/china-app-tun-compat.module) |
 | [`dns-mainland-china`](modules/dns-mainland-china.module) | AliDNS and DNSPod DoH for mainland networks | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/dns-mainland-china.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/dns-mainland-china.module) |
 | [`httpdns-block`](modules/httpdns-block.module) | Reject known app HTTPDNS endpoints | [Raw](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/modules/httpdns-block.module) · [CDN](https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@main/modules/httpdns-block.module) |
@@ -81,10 +86,13 @@ On 2026-09-10, the local checks passed for policy references, module boundaries,
 domain-file pairing, source pins, and selected client-parity rules. The remote
 audit fetched 114 unique sources and checked text payloads and binary signatures.
 Binary decoding is a separate native check. mihomo 1.19.30 loaded the export,
-started, and downloaded all 25 providers. Run the checks with:
+started, and downloaded all 25 providers. The research implementation then added eight provider selectors and four
+optional modules. All 34 validator regression cases, the 114-source audit, and
+the updated mihomo syntax check passed. Run the checks with:
 
 ```sh
 ruby scripts/validate_configs.rb
+ruby scripts/test_config_validation.rb
 ruby scripts/validate_soul_module.rb
 ruby scripts/audit_remote_sources.rb --self-test
 ruby scripts/audit_remote_sources.rb
@@ -96,7 +104,10 @@ routing behavior to be proven. See [`docs/policy-matrix.md`](docs/policy-matrix.
 
 ## Updating an existing installation
 
-This revision splits AI, developer, streaming, and Apple selectors and removes
+This revision adds explicit Copilot, Cursor, Perplexity, xAI/Grok, Hugging Face,
+Windsurf, and JetBrains AI choices across all four clients. Downloads, regional
+streaming, security DNS, and diagnostics are optional Shadowrocket modules.
+The earlier split separated AI, developer, streaming, and Apple selectors and removed
 base ad blocking. Refresh the profile and enabled modules together, reselect
 your routes, and enable Core or Lite if you still want blocking. Check new
 group defaults before browsing. Disable both return-to-China modules unless

@@ -13,10 +13,10 @@ Replace `<COMMIT_SHA>` with the 40-character ID. No current revision is
 claimed here as verified. Keep a local copy before changing the installed
 profile.
 
-Use one DNS module. Privacy DNS is the default for Hong Kong and travel;
-AliDNS/DNSPod is the mainland substitution. Endpoints are selected
+Use one DNS module. Privacy DNS is the general Hong Kong/travel option; Security DNS is its
+threat-filtering alternative. AliDNS/DNSPod is the mainland substitution. Endpoints are selected
 concurrently where supported, not as a guaranteed primary/fallback chain. If
-both are blocked, disable the module for captive-portal login.
+the selected resolvers are blocked, disable the module for captive-portal login.
 
 For client exports, use the [client-specific DNS substitutions](../exports/README.md#parity-and-exceptions).
 

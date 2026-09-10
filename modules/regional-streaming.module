@@ -1,0 +1,30 @@
+#!name = Andy Streaming — HK TW JP
+#!desc = Routes reviewed service-owned streaming domains by region. Each selector starts with its matching regional node and also permits PROXY, DIRECT, and every regional node.
+#!category = Streaming
+
+[Proxy Group]
+🇭🇰 HK Streaming = select,🇭🇰 Hong Kong Node,PROXY,DIRECT,🇺🇸 US Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+🇹🇼 TW Streaming = select,🇹🇼 Taiwan Node,PROXY,DIRECT,🇭🇰 Hong Kong Node,🇺🇸 US Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+🇯🇵 JP Streaming = select,🇯🇵 Japan Node,PROXY,DIRECT,🇭🇰 Hong Kong Node,🇺🇸 US Node,🇸🇬 Singapore Node,🇹🇼 Taiwan Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+# Service-owned domains reviewed in:
+# https://ruleset.skk.moe/List/non_ip/stream_hk.conf
+# https://ruleset.skk.moe/List/non_ip/stream_tw.conf
+# https://ruleset.skk.moe/List/non_ip/stream_jp.conf
+# Shared Brightcove, Bolt, CloudFront, Akamai, and other CDN hosts are intentionally omitted.
+DOMAIN-SUFFIX,viu.tv,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,viu.com,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,viu.now.com,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,mytvsuper.com,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,tvb.com,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,nowe.com,🇭🇰 HK Streaming
+DOMAIN-SUFFIX,kktv.me,🇹🇼 TW Streaming
+DOMAIN-SUFFIX,kktv.com.tw,🇹🇼 TW Streaming
+DOMAIN-SUFFIX,video.friday.tw,🇹🇼 TW Streaming
+DOMAIN-SUFFIX,abema.io,🇯🇵 JP Streaming
+DOMAIN-SUFFIX,abema.tv,🇯🇵 JP Streaming
+DOMAIN-SUFFIX,abema-tv.com,🇯🇵 JP Streaming
+DOMAIN-SUFFIX,tver.jp,🇯🇵 JP Streaming
+DOMAIN-SUFFIX,tver.co.jp,🇯🇵 JP Streaming
+DOMAIN-SUFFIX,dogatch.jp,🇯🇵 JP Streaming

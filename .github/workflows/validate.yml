@@ -17,4 +17,5 @@ jobs:
           ruby-version: "3.3"
       - run: ruby scripts/validate_soul_module.rb
       - run: ruby scripts/validate_configs.rb
+      - run: ruby scripts/test_config_validation.rb
       - run: ruby scripts/audit_remote_sources.rb --self-test

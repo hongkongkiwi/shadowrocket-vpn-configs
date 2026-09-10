@@ -5,12 +5,15 @@
 | Unmatched | `FINAL` to Fallback | final fallback group | final fallback group (default `PROXY`, initially a DIRECT placeholder) | final fallback policy |
 | China | ChinaMax and `GEOIP,CN` direct; travel module optional | native China providers direct | native China rules direct | China rules force `direct` |
 | Ads | None in base; Core or Lite, Aggressive only on Core | none in export | none in export | none in export |
-| AI | OpenAI, Claude, Google AI separate; shared dependencies excluded | three selectors | three selectors | three selectors |
-| GitHub | Developer Services | Developer Services | Developer Services | Developer Services |
+| AI | Eleven provider selectors including both Copilots, Cursor, Perplexity, xAI, Hugging Face, Windsurf and JetBrains; US first; shared dependencies excluded | same US defaults | same US defaults | same US defaults |
+| GitHub | General API/auth in Developer Services; Copilot API separate | same | same | same |
 | Streaming | YouTube, Netflix, Disney+, Prime Video, HBO, Bahamut separate | separate | separate | separate |
 | Apple | App Downloads, Updates, Siri, PCC, Push, Account, then Services | built into export | policy plus direct certificate exceptions | policy plus direct certificate exceptions |
 | App Store alias | optional Kingsoft host alias | omitted | omitted | omitted |
-| DNS | one optional DoH module | profile DoH | client resolver | DoH endpoints selected concurrently |
+| DNS | Privacy, Security, or Mainland DoH module; choose one | privacy DoH; documented security substitution | privacy DoH; documented security substitution | concurrent privacy DoH; documented security substitution |
+| Bulk downloads | optional selected game/package asset hosts | omitted | omitted | omitted |
+| Regional streaming | optional HK/TW/JP services | omitted | omitted | omitted |
+| Diagnostics | optional selected Ookla hosts; Fast.com remains Netflix | omitted | omitted | omitted |
 | QUIC | unchanged in base; optional compatibility module blocks proxied QUIC | unchanged | unchanged | unchanged |
 | IPv6 | disabled by base; optional enable/prefer modules | disabled in profile and DNS | disabled in profile | client default |
 

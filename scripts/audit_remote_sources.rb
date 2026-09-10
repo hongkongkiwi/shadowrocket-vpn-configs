@@ -15,6 +15,58 @@ PATHS = [
 ].freeze
 SOURCE_HOSTS = %w[anti-ad.net cdn.jsdelivr.net github.com raw.githubusercontent.com].freeze
 AI_SHARED_DEPENDENCIES = %w[stripe.com auth0.com sentry.io intercom.io api.cloudflare.com].freeze
+SHARED_SCOPE = (AI_SHARED_DEPENDENCIES + %w[api.github.com githubusercontent.com cloudflare.com cloudfront.net amazonaws.com windows.net azureedge.net azurefd.net akamaized.net akamaihd.net fastly.net brightcove.net cloudinary.com workers.dev pages.dev vercel.app netlify.app]).freeze
+RULE_TYPES = %w[DOMAIN DOMAIN-SUFFIX DOMAIN-KEYWORD DOMAIN-WILDCARD DOMAIN-REGEX HOST HOST-SUFFIX HOST-KEYWORD HOST-WILDCARD IP-CIDR IP-CIDR6 IP6-CIDR IP-ASN GEOIP USER-AGENT URL-REGEX PROCESS-NAME PROCESS-PATH DST-PORT SRC-PORT AND OR NOT].freeze
+
+def review_rules(filename, bytes)
+  text = bytes.dup.force_encoding(Encoding::UTF_8)
+  raise "source comparison requires decoded UTF-8 text" unless text.valid_encoding? && !text.include?("\0")
+  if filename.end_with?(".yaml", ".yml")
+    document = YAML.safe_load(text, aliases: false)
+    raise "expected string payload array" unless document.is_a?(Hash) && document["payload"].is_a?(Array) && document["payload"].all? { |rule| rule.is_a?(String) }
+    rules = document["payload"].map(&:strip)
+  else
+    rules = text.lines.map(&:strip)
+  end
+  rules.reject! { |line| line.empty? || line.start_with?("#", ";", "//") }
+  raise "no active rules" if rules.empty?
+  # Accept domain-only lists as well as classical rule payloads, never binary data.
+  domain_set = rules.none? { |line| line.include?(",") }
+  check_rule_lines(rules, domain_set: domain_set)
+  rules.map do |rule|
+    if domain_set
+      "#{rule.start_with?('.') ? 'DOMAIN-SUFFIX' : 'DOMAIN'},#{rule.delete_prefix('.')}"
+    else
+      rule.split(",").map(&:strip).join(",")
+    end
+  end.uniq
+end
+
+def scope_risks(rule)
+  kind, value = rule.split(",", 3)
+  kind = kind.upcase
+  value = value.downcase.delete_suffix(".")
+  risks = []
+  risks << "keyword/wildcard/regex scope" if kind.match?(/KEYWORD|WILDCARD|REGEX/)
+  risks << "whole network or geographic scope" if %w[IP-ASN GEOIP].include?(kind)
+  risks << "whole top-level domain" if %w[DOMAIN-SUFFIX HOST-SUFFIX].include?(kind) && !value.include?(".")
+  shared_suffix = %w[DOMAIN-SUFFIX HOST-SUFFIX].include?(kind) && SHARED_SCOPE.any? { |parent| value.end_with?(".#{parent}") }
+  risks << "shared service/CDN scope" if SHARED_SCOPE.include?(value) || shared_suffix
+  risks << "client-specific or compound rule" if %w[PROCESS-NAME PROCESS-PATH USER-AGENT AND OR NOT].include?(kind)
+  risks
+end
+
+def check_rule_lines(rules, domain_set: false)
+  invalid = rules.find do |rule|
+    if domain_set
+      !rule.match?(/\A\.?(?:[[:alnum:]_-]+\.)+[[:alnum:]_-]+\.?\z/)
+    else
+      kind, value = rule.split(",", 3)
+      !RULE_TYPES.include?(kind.to_s.upcase) || value.to_s.strip.empty?
+    end
+  end
+  raise "invalid #{domain_set ? 'domain' : 'rule'} entry: #{invalid[0, 120]}" if invalid
+end
 
 def audit_payload(url, bytes, urls)
   raise "empty response" if bytes.empty?
@@ -34,8 +86,10 @@ def audit_payload(url, bytes, urls)
   if url.end_with?(".yaml", ".yml")
     document = YAML.safe_load(text, aliases: false)
     raise "expected nonempty string payload array" unless document.is_a?(Hash) && document["payload"].is_a?(Array) && !document["payload"].empty? && document["payload"].all? { |rule| rule.is_a?(String) && !rule.strip.empty? }
+    check_rule_lines(document["payload"])
     count = document["payload"].size
   else
+    check_rule_lines(active, domain_set: url.end_with?("_Domain.list"))
     count = active.size
   end
 
@@ -80,12 +134,24 @@ def audit_sources(urls)
 end
 
 if ARGV == ["--self-test"]
+  raise "missed ASN scope" if scope_risks("IP-ASN,14061,no-resolve").empty?
+  raise "missed TLD scope" if scope_risks("DOMAIN-SUFFIX,ai").empty?
+  raise "missed shared scope" if scope_risks("DOMAIN,api.github.com").empty?
+  %w[s3.amazonaws.com blob.core.windows.net githubusercontent.com].each do |domain|
+    raise "missed shared tenant suffix" if scope_risks("DOMAIN-SUFFIX,#{domain}").empty?
+  end
+  raise "flagged exact dedicated tenant" unless scope_risks("DOMAIN,ppl-ai-file-upload.s3.amazonaws.com").empty?
+  raise "flagged provider hostname" unless scope_risks("DOMAIN,api.githubcopilot.com").empty?
+  raise "missed keyword scope" if scope_risks("DOMAIN-KEYWORD,github").empty?
+  raise "changed domain-list meaning" unless review_rules("domains.list", ".example.com\nexample.org\n") == ["DOMAIN-SUFFIX,example.com", "DOMAIN,example.org"]
   url = "https://example.com/rule/Surge/Example/Example.list"
   split = "# DOMAIN: 1\nIP-CIDR,192.0.2.0/24,no-resolve\n"
   raise "missed split source" if audit_payload(url, split, [url]).last.empty?
   raise "rejected paired source" unless audit_payload(url, split, [url, url.sub(".list", "_Domain.list")]).last.empty?
   raise "wrong YAML count" unless audit_payload("https://example.com/rules.yaml", 'payload: ["DOMAIN,example.com"]', []).first == 1
-  [[url, ""], [url, "<html>blocked</html>"], ["https://example.com/rules.yaml", "message: unavailable"], ["https://example.com/rules.mrs", "not zstd"]].each do |source, body|
+  domain_url = "https://example.com/Example_Domain.list"
+  raise "rejected valid domains" unless audit_payload(domain_url, "example.com\n.ads.example.com\n", []).first == 2
+  [[url, ""], [url, "<html>blocked</html>"], [url, "Service unavailable"], [url, "DOMAIN,"], [domain_url, "DOMAIN,example.com"], ["https://example.com/rules.yaml", "message: unavailable"], ["https://example.com/rules.yaml", "payload: ['Service unavailable']"], ["https://example.com/rules.mrs", "not zstd"]].each do |source, body|
     rejected = false
     begin
       audit_payload(source, body, [])
@@ -103,7 +169,23 @@ if ARGV == ["--self-test"]
   puts "Remote audit self-checks passed (offline)."
   exit
 end
-abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test]" unless ARGV.empty?
+if ARGV.first == "--compare" && ARGV.length == 3
+  begin
+    before, after = ARGV.drop(1).map { |filename| review_rules(filename, File.binread(filename)) }
+    added, removed = after - before, before - after
+    puts "Source comparison: #{added.length} added, #{removed.length} removed."
+    removed.each { |rule| puts "- #{rule}" }
+    added.each { |rule| puts "+ #{rule}" }
+    risks = added.flat_map { |rule| scope_risks(rule).map { |risk| "#{risk}: #{rule}" } }
+    risks << "relative rule order changed" unless (before & after) == (after & before)
+    abort "Scope review required before updating the pin:\n#{risks.join("\n")}" unless risks.empty?
+    puts "No flagged scope expansion. Review deletions, ownership, and rule order before updating the pin."
+  rescue StandardError => e
+    abort "Source comparison failed: #{e.message}"
+  end
+  exit
+end
+abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test | --compare OLD_FILE NEW_FILE]" unless ARGV.empty?
 
 urls = PATHS.flat_map do |path|
   File.readlines(File.join(ROOT, path)).reject { |line| line.strip.start_with?("#", ";", "//", "update-url =") }

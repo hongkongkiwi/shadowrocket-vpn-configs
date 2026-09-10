@@ -12,9 +12,23 @@ QX = "exports/quantumultx/QuantumultX.conf"
 MODULE_CONFLICTS = [
   %w[adblock-core adblock-lite],
   %w[privacy-dns dns-mainland-china],
+  %w[security-dns privacy-dns],
+  %w[security-dns dns-mainland-china],
   %w[back-to-cn back-to-cn-all],
   %w[ipv6 ipv6-preferred]
 ].freeze
+NEW_AI_CASES = {
+  "api.githubcopilot.com" => "🧑‍💻 GitHub Copilot",
+  "copilot-proxy.githubusercontent.com" => "🧑‍💻 GitHub Copilot",
+  "copilot.microsoft.com" => "🪟 Microsoft Copilot",
+  "api2.cursor.sh" => "🖱️ Cursor",
+  "api.perplexity.ai" => "🔍 Perplexity",
+  "api.x.ai" => "𝕏 xAI / Grok",
+  "grok.com" => "𝕏 xAI / Grok",
+  "huggingface.co" => "🤗 Hugging Face",
+  "server.codeium.com" => "🏄 Windsurf",
+  "api.jetbrains.ai" => "🧠 JetBrains AI"
+}.freeze
 errors = []
 
 def lines(path)
@@ -24,6 +38,7 @@ end
 def section(path, name)
   active = false
   lines(path).each_with_object([]) do |line, result|
+    line = line.strip
     if line == "[#{name}]"
       active = true
       next
@@ -34,7 +49,7 @@ def section(path, name)
 end
 
 def entries(path, name)
-  section(path, name).reject { |line| line.empty? || line.start_with?("#", ";", "//") }
+  section(path, name).map(&:strip).reject { |line| line.empty? || line.start_with?("#", ";", "//") }
 end
 
 def groups(path)
@@ -44,6 +59,22 @@ end
 def rule_policy(line)
   fields = line.split(",").map(&:strip)
   %w[FINAL MATCH].include?(fields.first.upcase) ? fields[1] : fields[2]
+end
+
+def normalized_rule(line)
+  fields = line.split(",").map(&:strip)
+  fields[0] = fields[0].upcase.sub(/^HOST/, "DOMAIN")
+  fields
+end
+
+def matching_domain_rule(rules, host)
+  rules.map { |line| normalized_rule(line) }.find do |kind, value, _policy|
+    case kind
+    when "DOMAIN" then host == value
+    when "DOMAIN-SUFFIX" then host == value || host.end_with?(".#{value}")
+    when "DOMAIN-KEYWORD" then host.include?(value)
+    end
+  end
 end
 
 def check_rule_refs(path, known, errors, section_name = "Rule")
@@ -109,6 +140,24 @@ selected_modules = ARGV.map { |arg| File.basename(arg, ".module") }.uniq
 MODULE_CONFLICTS.each do |pair|
   errors << "selected modules conflict: #{pair.join(" and ")}" if (pair - selected_modules).empty?
 end
+if selected_modules.include?("adblock-aggressive") && !selected_modules.include?("adblock-core")
+  errors << "adblock-aggressive requires adblock-core"
+end
+# Arguments follow the top-to-bottom module order documented in recipes.md.
+before_pairs = available_modules.grep(/^apple-/).reject { |name| %w[apple-services apple-app-store-cdn].include?(name) }.map { |name| [name, "apple-services"] }
+%w[back-to-cn back-to-cn-all].each do |travel|
+  %w[adblock-core adblock-lite adblock-aggressive httpdns-block soul-ktv].each { |name| before_pairs << [name, travel] }
+end
+%w[adblock-core adblock-lite adblock-aggressive httpdns-block].each { |name| before_pairs << [name, "soul-ktv"] }
+before_pairs << ["adblock-core", "adblock-aggressive"]
+%w[bulk-downloads regional-streaming network-diagnostics].each do |optional|
+  %w[adblock-core adblock-lite adblock-aggressive httpdns-block].each { |block| before_pairs << [block, optional] }
+  %w[back-to-cn back-to-cn-all].each { |travel| before_pairs << [optional, travel] }
+end
+before_pairs.each do |first, last|
+  first_index, last_index = [first, last].map { |name| selected_modules.index(name) }
+  errors << "module order: #{first} must precede #{last}" if first_index && last_index && first_index > last_index
+end
 selected_groups = base_groups + (selected_modules & available_modules).flat_map do |name|
   groups("modules/#{name}.module")
 end
@@ -170,6 +219,20 @@ end
 check_rule_refs(QX, qx_policies + BUILT_INS, errors, "filter_local")
 check_final(QX, entries(QX, "filter_local"), errors)
 
+(["🤖 OpenAI", "🧠 Claude", "💎 Google AI"] + NEW_AI_CASES.values.uniq).each do |name|
+  [BASE, SURGE, QX, CLASH].each do |path|
+    first = if path == CLASH
+              clash.fetch("proxy-groups").find { |group| group["name"] == name }&.fetch("proxies", [])&.first
+            else
+              group_line = entries(path, path == QX ? "policy" : "Proxy Group").find do |line|
+                path == QX ? line.start_with?("static=#{name},") : line.split("=", 2).first.strip == name
+              end
+              group_line && group_members(group_line).first
+            end
+    errors << "#{path}: #{name} must default to the US group" unless first == "🇺🇸 US Node"
+  end
+end
+
 # Manual DIRECT choices never change the existing first/default candidate.
 [BASE, SURGE].each do |path|
   entries(path, "Proxy Group").grep(/= select,/).each do |line|
@@ -184,7 +247,10 @@ entries(QX, "policy").grep(/^static=/).each do |line|
 end
 
 config_paths = [BASE, SURGE, CLASH, QX] + Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| path.delete_prefix("#{ROOT}/") }
-all_config = config_paths.to_h { |path| [path, File.read(File.join(ROOT, path))] }
+all_config = config_paths.to_h do |path|
+  active = lines(path).reject { |line| line.strip.start_with?("#", ";", "//") }
+  [path, active.join("\n")]
+end
 unsafe = [
   "/Rules/Direct.list",
   "/Rules/Reject.list",
@@ -264,6 +330,18 @@ privacy_dns = all_config.fetch("modules/privacy-dns.module")
 }.each do |setting, value|
   require_text(privacy_dns, "#{setting} = #{value}", "modules/privacy-dns.module", errors)
   errors << "#{BASE}: #{setting} must stay optional" if main.match?(/^#{Regexp.escape(setting)}\s*=/)
+end
+
+security_dns = all_config.fetch("modules/security-dns.module")
+{
+  "dns-server" => "https://security.cloudflare-dns.com/dns-query",
+  "fallback-dns-server" => "https://dns.quad9.net/dns-query",
+  "dns-direct-system" => "false",
+  "dns-direct-fallback-proxy" => "false",
+  "hijack-dns" => "*:53"
+}.each do |setting, value|
+  actual = entries("modules/security-dns.module", "General").grep(/^#{Regexp.escape(setting)}\s*=/)
+  errors << "security-dns: #{setting} must use only the reviewed security setting" unless actual == ["#{setting} = #{value}"]
 end
 
 china_dns = all_config.fetch("modules/dns-mainland-china.module")
@@ -384,6 +462,46 @@ end
 recipes = File.read(File.join(ROOT, "docs/recipes.md"))
 MODULE_CONFLICTS.each do |pair|
   pair.each { |name| require_text(recipes, name, "docs/recipes.md", errors) }
+end
+
+# Offline hostname checks cover local routing and precedence, not DNS/IP/native behavior.
+client_rules = { BASE => entries(BASE, "Rule"), SURGE => entries(SURGE, "Rule"), CLASH => clash.fetch("rules"), QX => entries(QX, "filter_local") }
+reference_ai = entries(BASE, "Rule").map { |line| normalized_rule(line) }.select { |fields| NEW_AI_CASES.value?(fields[2]) }
+client_rules.each do |path, rules|
+  ai_rules = rules.select { |line| NEW_AI_CASES.value?(rule_policy(line)) }
+  normalized = ai_rules.map { |line| normalized_rule(line) }
+  errors << "#{path}: new AI provider rules differ from the base" unless normalized == reference_ai
+  errors << "#{path}: AI providers require narrow domain rules" unless normalized.all? { |kind, _, _| %w[DOMAIN DOMAIN-SUFFIX].include?(kind) }
+  NEW_AI_CASES.each do |host, policy|
+    actual = matching_domain_rule(rules, host)&.[](2)
+    errors << "#{path}: routing case #{host} expected #{policy}, got #{actual.inspect}" unless actual == policy
+  end
+  %w[api.github.com github.com login.microsoftonline.com api.stripe.com cloudfront.net ai.com raw.githubusercontent.com other.s3.amazonaws.com other.blob.core.windows.net].each do |host|
+    errors << "#{path}: AI rules capture shared/non-provider host #{host}" if matching_domain_rule(ai_rules, host)
+  end
+  unless path == QX # Local filters take precedence over QX remote filters.
+    first_broad = rules.index { |line| line.match?(%r{(?:/(?:Github|GitHub|Microsoft|Twitter|Proxy|CDN)\.list,|RULE-SET,(?:github|microsoft|twitter|proxy|geolocation-!cn),)}i) }
+    last_ai = rules.rindex { |line| NEW_AI_CASES.value?(rule_policy(line)) }
+    errors << "#{path}: AI provider rules must precede broad service rules" unless first_broad && last_ai && last_ai < first_broad
+  end
+end
+
+module_cases = {
+  "bulk-downloads" => { "cdn.steamcontent.com" => "⬇️ Bulk Downloads", "download.windowsupdate.com" => "⬇️ Bulk Downloads", "files.pythonhosted.org" => "⬇️ Bulk Downloads", "static.crates.io" => "⬇️ Bulk Downloads", "steamcommunity.com" => nil, "api.steampowered.com" => nil, "api.github.com" => nil, "pypi.org" => nil, "crates.io" => nil, "apps.apple.com" => nil },
+  "regional-streaming" => { "viu.tv" => "🇭🇰 HK Streaming", "mytvsuper.com" => "🇭🇰 HK Streaming", "nowe.com" => "🇭🇰 HK Streaming", "kktv.me" => "🇹🇼 TW Streaming", "ana.video.friday.tw" => "🇹🇼 TW Streaming", "abema.tv" => "🇯🇵 JP Streaming", "tver.jp" => "🇯🇵 JP Streaming", "players.brightcove.net" => nil, "unrelated.cloudfront.net" => nil },
+  "network-diagnostics" => { "www.speedtest.net" => "📶 Network Diagnostics", "example.ooklaserver.net" => "📶 Network Diagnostics", "fast.com" => nil, "netflix.com" => nil }
+}
+module_cases.each do |name, cases|
+  path = "modules/#{name}.module"
+  rules = entries(path, "Rule")
+  errors << "#{path}: optional routing must contain narrow domain rules only" unless rules.all? { |line| %w[DOMAIN DOMAIN-SUFFIX].include?(normalized_rule(line).first) }
+  cases.each do |host, expected|
+    actual = matching_domain_rule(rules, host)&.[](2)
+    errors << "#{path}: routing case #{host} expected #{expected.inspect}, got #{actual.inspect}" unless actual == expected
+  end
+  groups(path).each do |name|
+    errors << "#{name}: optional module leaked into base/export" if [base_groups, surge_groups, clash_groups, qx_policies].any? { |known| known.include?(name) }
+  end
 end
 
 if errors.empty?

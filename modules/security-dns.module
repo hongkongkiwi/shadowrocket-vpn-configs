@@ -1,0 +1,14 @@
+#!name = Andy Privacy — Security DNS
+#!desc = Uses Cloudflare Security DNS as primary and Quad9 as fallback over HTTPS, with DNS interception and no system fallback. Use outside mainland China where these resolvers are reachable.
+#!category = Privacy
+
+# Resolver references:
+# https://developers.cloudflare.com/1.1.1.1/privacy/security/
+# https://www.quad9.net/service/service-addresses-and-features/
+
+[General]
+dns-server = https://security.cloudflare-dns.com/dns-query
+fallback-dns-server = https://dns.quad9.net/dns-query
+dns-direct-system = false
+dns-direct-fallback-proxy = false
+hijack-dns = *:53

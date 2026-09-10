@@ -1,0 +1,61 @@
+#!name = Andy Downloads — Games and Software
+#!desc = Routes selected game, developer, CDN, and Windows Update download hosts. The selector defaults to PROXY; Apple downloads stay in the Apple modules.
+#!category = Downloads
+
+[Proxy Group]
+⬇️ Bulk Downloads = select,PROXY,DIRECT,🇭🇰 Hong Kong Node,🇺🇸 US Node,🇸🇬 Singapore Node,🇯🇵 Japan Node,🇹🇼 Taiwan Node,interval=86400,timeout=3,select=0,url=http://1.1.1.1/generate_204
+
+[Rule]
+# Reviewed against Sukka game-download and download snapshots on 2026-09-10:
+# https://ruleset.skk.moe/List/domainset/game-download.conf
+# https://ruleset.skk.moe/List/domainset/download.conf
+# Game content is kept separate from Steam community/API traffic by matching content hosts only.
+DOMAIN-SUFFIX,cdn.ea.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,cdn.ubi.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dyn.riotcdn.net,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,cdn.blizzard.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,cdn.nintendo.net,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,epicgamescdn.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,steamcontent.com,⬇️ Bulk Downloads
+DOMAIN,dist.blizzard.com,⬇️ Bulk Downloads
+DOMAIN,download.xbox.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.playstation.net,⬇️ Bulk Downloads
+DOMAIN,xvcf1.xboxlive.com,⬇️ Bulk Downloads
+DOMAIN,xvcf2.xboxlive.com,⬇️ Bulk Downloads
+DOMAIN,cdn-patch.swtor.com,⬇️ Bulk Downloads
+DOMAIN,level3.blizzard.com,⬇️ Bulk Downloads
+DOMAIN,assets1.xboxlive.com,⬇️ Bulk Downloads
+DOMAIN,assets2.xboxlive.com,⬇️ Bulk Downloads
+DOMAIN,origin-a.akamaihd.net,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download.dm.origin.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download.epicgames.com,⬇️ Bulk Downloads
+DOMAIN,gog-cdn-fastly.gog.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download2.epicgames.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download3.epicgames.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download4.epicgames.com,⬇️ Bulk Downloads
+DOMAIN,packagespc.xboxlive.com,⬇️ Bulk Downloads
+DOMAIN,steampipe.akamaized.net,⬇️ Bulk Downloads
+DOMAIN,content-origin.steampowered.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,content.cdp.bethesda.net,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download.cdp.bethesda.net,⬇️ Bulk Downloads
+DOMAIN,static.hikarifield.co.jp,⬇️ Bulk Downloads
+DOMAIN,download.hikarifield.co.jp,⬇️ Bulk Downloads
+DOMAIN,fastly-download.epicgames.com,⬇️ Bulk Downloads
+DOMAIN,epicgames-download1.akamaized.net,⬇️ Bulk Downloads
+DOMAIN,pf-cdn-content-prod.azureedge.net,⬇️ Bulk Downloads
+DOMAIN,gamedownloads-rockstargames-com.akamaized.net,⬇️ Bulk Downloads
+# Narrow developer and software download hosts from the reviewed GitHub allowlist:
+# https://docs.github.com/en/copilot/reference/copilot-allowlist-reference
+DOMAIN-SUFFIX,ghcr.io,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,pkg.dev,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,files.pythonhosted.org,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,static.crates.io,⬇️ Bulk Downloads
+# npm registry is confirmed, but this host also carries package metadata.
+DOMAIN-SUFFIX,registry.npmjs.org,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.google.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.min.io,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.ui.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.iina.io,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.nwjs.io,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,download.windowsupdate.com,⬇️ Bulk Downloads
+DOMAIN-SUFFIX,dl.delivery.mp.microsoft.com,⬇️ Bulk Downloads
