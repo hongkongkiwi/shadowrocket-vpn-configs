@@ -152,6 +152,11 @@ location_profiles(ROOT).each do |path, expected|
     errors << "#{path}: wrong default for #{name}" unless group_members(line).first == expected_default && line.split(",").include?("select=0")
   end
   rules = entries(path, "Rule")
+  defaults = entries(path, "Proxy Group").to_h { |line| [line.split("=", 2).first.strip, group_members(line).first] }
+  rules.reject { |line| proxy_groups.include?(rule_policy(line)) }.each do |line|
+    policy = rule_policy(line)
+    errors << "#{path}: non-AI/TikTok rule must default to DIRECT: #{line}" unless defaults.fetch(policy, policy) == "DIRECT"
+  end
   rules.select { |line| proxy_groups.include?(rule_policy(line)) }.each do |line|
     errors << "#{path}: proxy routes must use narrow domain rules" unless %w[DOMAIN DOMAIN-SUFFIX].include?(normalized_rule(line).first)
   end

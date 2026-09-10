@@ -172,7 +172,7 @@ in mainland China.
 
 ## Captive portal and DNS recovery
 
-1. Disable the active DNS, private-answer, and HTTPDNS modules. If using a location
+1. Disable the active DNS modules, `private-ip-block`, and `httpdns-block`. If using a location
    profile, temporarily switch to the legacy `shadowrocket.conf` with those
    modules disabled; disabling modules alone does not remove embedded DNS.
 2. Keep `captive.apple.com` in the base `skip-proxy` setting.

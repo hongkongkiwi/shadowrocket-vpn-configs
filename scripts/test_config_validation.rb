@@ -50,8 +50,14 @@ base = File.read(File.join(root, "shadowrocket.conf"))
     expected = proxied_in_hk.include?(name) ? "🇺🇸 US Node" : location == "hong-kong" ? "DIRECT" : "PROXY"
     abort "#{location}: wrong default for #{name}" unless choices.split(",")[1] == expected && choices.split(",").include?("select=0")
   end
-  resolver = location == "hong-kong" ? "https://cloudflare-dns.com/dns-query" : "https://dns.alidns.com/dns-query#no-h3"
-  abort "#{location}: wrong DNS" unless profile.lines.grep(/^dns-server = /).map(&:strip) == ["dns-server = #{resolver}"]
+  expected_dns = {
+    "dns-server" => location == "hong-kong" ? "https://cloudflare-dns.com/dns-query" : "https://dns.alidns.com/dns-query#no-h3",
+    "fallback-dns-server" => location == "hong-kong" ? "https://dns.quad9.net/dns-query" : "https://doh.pub/dns-query#no-h3",
+    "dns-direct-system" => "false", "dns-direct-fallback-proxy" => "false", "hijack-dns" => "*:53"
+  }
+  expected_dns.each do |setting, value|
+    abort "#{location}: wrong DNS setting #{setting}" unless profile.lines.grep(/^#{Regexp.escape(setting)}\s*=/).map(&:strip) == ["#{setting} = #{value}"]
+  end
   abort "#{location}: wrong update URL" unless profile.lines.grep(/^update-url = /).map(&:strip) == ["update-url = https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/#{location}.conf"]
   checks += 1
 end
@@ -98,6 +104,12 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
   rule = "DOMAIN-SUFFIX,githubcopilot.com,🧑‍💻 GitHub Copilot"
   File.write(filename, original.sub("#{rule}\n", "").sub("FINAL,", "#{rule}\nFINAL,"))
   check.call(scratch, [], "must precede broad service rules")
+  File.write(filename, original)
+
+  File.write(filename, original.sub("/Proxy.list,🌏 Foreign Websites", "/Proxy.list,PROXY"))
+  output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
+  abort "Profile regeneration failed: #{output}" unless status.success?
+  check.call(scratch, [], "non-AI/TikTok rule must default to DIRECT")
   File.write(filename, original)
 
   # Regenerate after mutations so stale-output detection cannot mask routing defects.

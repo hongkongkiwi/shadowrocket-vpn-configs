@@ -8,13 +8,12 @@ certificates, or MITM private keys.
 ## Start here
 
 1. Add your proxy subscription in Shadowrocket.
-2. Import the profile for your current location:
+2. Import both profiles, then select the one for your current location:
    - [Hong Kong](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/hong-kong.conf): [`hong-kong.conf`](hong-kong.conf). Only AI and international TikTok default to a proxy. Everything else, including GitHub, streaming, gaming, and unmatched traffic, defaults to `DIRECT`. Includes Cloudflare/Quad9 DNS.
-   - [Mainland China](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/mainland-china.conf): [`mainland-china.conf`](mainland-china.conf). Mainland and local destinations route directly; international services and unmatched traffic default to a proxy. Includes AliDNS/DNSPod DNS.
+   - [Mainland China](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/mainland-china.conf): [`mainland-china.conf`](mainland-china.conf). Local network and ChinaMax/China-IP matches route directly unless an earlier service rule applies; international services and unmatched traffic default to a proxy. Includes AliDNS/DNSPod DNS.
 3. Import and order modules using [`docs/recipes.md`](docs/recipes.md).
 4. Run `ruby scripts/validate_configs.rb` before sharing a profile.
 
-Import both location profiles and select the one matching your current network.
 Disable DNS modules when using them: each profile includes its own DNS settings.
 Modules and saved selector choices can override these defaults. For the Hong Kong
 AI/TikTok-only setup, leave `private-ip-block`, shared AI dependencies, bulk

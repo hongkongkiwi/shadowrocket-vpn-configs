@@ -20,7 +20,7 @@ threat-filtering alternative. AliDNS/DNSPod is the mainland substitution. Endpoi
 concurrently where supported, not as a guaranteed primary/fallback chain. If
 the selected resolvers are blocked, disable the module for captive-portal login.
 For a location profile, temporarily select the legacy `shadowrocket.conf` with
-DNS, private-answer, and HTTPDNS modules disabled. Disabling modules alone
+DNS modules, `private-ip-block`, and `httpdns-block` disabled. Disabling modules alone
 cannot remove DNS settings embedded in a location profile. After network login,
 restore the appropriate location profile and leave DNS modules off.
 
