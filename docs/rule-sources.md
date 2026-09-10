@@ -35,6 +35,29 @@ hosts, telemetry-only dependencies, and whole ASNs are excluded. Shared API
 paths on one hostname cannot receive different routes through a domain rule.
 Keep those hosts in their existing service policy rather than enabling MITM.
 
+## Hong Kong proxy boundaries
+
+`rules/hong-kong-proxy.list` replaces three remote lists only in the generated
+Hong Kong profile. The review used the pinned
+[TikTok inventory](https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/TikTok.list),
+[Claude inventory](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Claude/Claude.list), and
+[Gemini inventory](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Gemini/Gemini.list).
+Google's [Gemini API reference](https://ai.google.dev/api) and
+[Colab site](https://colab.research.google.com/) supply explicit service hosts
+instead of the upstream keyword matches. AI Studio uses `aistudio.google.com`.
+
+The TikTok subset excludes CapCut, generic ByteDance domains, unrelated sites,
+shared analytics, keyword matches, and whole ASNs. Claude excludes the shared
+Fathom CDN. Google AI excludes generic `apis.google.com` and replaces keyword
+matches with explicit AI hosts. Existing inline AI routes stay unchanged.
+All remaining remote lists in the Hong Kong profile select `DIRECT` by default.
+
+This scope keeps unrelated services direct. It does not prove complete native
+TikTok playback, AI login, or shared-CDN coverage. If one fails, inspect the
+failing hostname and add a narrow private override; a blanket ByteDance or
+Google API proxy would undo the requested boundary. Mainland and other client
+profiles retain their previous source lists.
+
 ## Optional routing modules
 
 The bulk-download and regional-streaming modules use small reviewed subsets

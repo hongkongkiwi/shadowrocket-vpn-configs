@@ -66,10 +66,14 @@ Emby hosts in private overrides until there is a tested rule worth sharing.
 
 ## Hong Kong and travel
 
+Use [`hong-kong.conf`](../hong-kong.conf) while in Hong Kong. It includes privacy
+DNS and defaults every service and unmatched traffic to `DIRECT` except AI and
+international TikTok, which retain the US proxy default. Leave DNS modules off.
+For this profile, start with the optional modules below. Ad blocking is optional,
+and the Apple Intelligence module is only needed for Apple's AI cloud endpoints.
+
 ```text
 adblock-core (or adblock-lite)
-privacy-dns
-private-ip-block (omit for split DNS/private services)
 apple-certificate-validation
 apple-account
 apple-push
@@ -79,28 +83,39 @@ apple-intelligence (only when needed)
 apple-services
 ```
 
+For the legacy `shadowrocket.conf`, add `privacy-dns` to that recipe.
+Leave `private-ip-block` off for the AI/TikTok-only setup: it can force unrelated
+domains through a proxy when DNS returns a private address. Also leave
+`ai-shared-dependencies`, `bulk-downloads`, `regional-streaming`, Soul, and both
+return-to-China modules off unless you deliberately want their extra routes.
+
 Leave mainland DNS, `back-to-cn-all`, and the App Store CDN alias off. Add
 `httpdns-block` or `real-ip-compat` only for a specific app failure. Choose
 `ipv6` to enable IPv6 without preferring it. Use `ipv6-preferred` instead
 only if the network and every chosen node pass IPv6 tests. `quic-compat` is
 optional when a proxied app fails with QUIC.
 
-Every base service selector has a manual `DIRECT` option. In Hong Kong, choose
-it for services that work locally, without changing AI or streaming routes.
-Existing proxy defaults are unchanged. `DIRECT` uses the current network and
+Every service selector has a manual `DIRECT` option. The legacy profile keeps
+its proxy defaults; the Hong Kong profile already selects `DIRECT` for GitHub,
+streaming, gaming, and other ordinary services. Disable optional proxy routing
+modules to keep only AI and international TikTok proxied. `DIRECT` uses the current network and
 does not provide a mainland IP when you're in Hong Kong.
 
 ## Mainland China
 
+Use [`mainland-china.conf`](../mainland-china.conf) while in mainland China.
+It includes mainland DNS, so leave DNS modules off.
+
 ```text
 adblock-core (or adblock-lite)
-dns-mainland-china
 apple-certificate-validation
 apple-account
 apple-push
 apple-updates
 apple-services
 ```
+
+For the legacy `shadowrocket.conf`, add `dns-mainland-china` to that recipe.
 
 Start Apple Account and Apple Services on `DIRECT`. If that fails, hold one
 Hong Kong node fixed and use `PROXY` for both throughout sign-in. Add
@@ -157,9 +172,12 @@ in mainland China.
 
 ## Captive portal and DNS recovery
 
-1. Disable the active DNS, private-answer, and HTTPDNS modules.
+1. Disable the active DNS modules, `private-ip-block`, and `httpdns-block`. If using a location
+   profile, temporarily switch to the legacy `shadowrocket.conf` with those
+   modules disabled; disabling modules alone does not remove embedded DNS.
 2. Keep `captive.apple.com` in the base `skip-proxy` setting.
-3. Complete the network sign-in, then restore one DNS module.
+3. Complete the network sign-in, then restore the correct location profile with
+   DNS modules off, or restore one DNS module if staying on the legacy profile.
 4. For Apple sign-in, disable the CDN alias and use `DIRECT` for Account and
    Services; if needed, use one fixed Hong Kong node for both.
 

@@ -11,12 +11,18 @@ https://cdn.jsdelivr.net/gh/hongkongkiwi/shadowrocket-vpn-configs@<COMMIT_SHA>/s
 
 Replace `<COMMIT_SHA>` with the 40-character ID. No current revision is
 claimed here as verified. Keep a local copy before changing the installed
-profile.
+profile. To roll back a location profile, substitute `hong-kong.conf` or
+`mainland-china.conf` in both URLs and choose a commit containing that file.
 
-Use one DNS module. Privacy DNS is the general Hong Kong/travel option; Security DNS is its
+Location profiles include DNS; leave DNS modules off. With the legacy
+`shadowrocket.conf`, use one DNS module. Privacy DNS is the general Hong Kong/travel option; Security DNS is its
 threat-filtering alternative. AliDNS/DNSPod is the mainland substitution. Endpoints are selected
 concurrently where supported, not as a guaranteed primary/fallback chain. If
 the selected resolvers are blocked, disable the module for captive-portal login.
+For a location profile, temporarily select the legacy `shadowrocket.conf` with
+DNS modules, `private-ip-block`, and `httpdns-block` disabled. Disabling modules alone
+cannot remove DNS settings embedded in a location profile. After network login,
+restore the appropriate location profile and leave DNS modules off.
 
 For client exports, use the [client-specific DNS substitutions](../exports/README.md#parity-and-exceptions).
 

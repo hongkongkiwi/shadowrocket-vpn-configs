@@ -2,6 +2,7 @@
 
 require "yaml"
 require "uri"
+require_relative "generate_profiles"
 
 ROOT = File.expand_path("..", __dir__)
 BUILT_INS = %w[DIRECT REJECT PROXY direct reject proxy].freeze
@@ -133,6 +134,49 @@ base_groups = groups(BASE)
 check_groups(BASE, base_groups, errors)
 check_rule_refs(BASE, base_groups + BUILT_INS, errors)
 check_final(BASE, entries(BASE, "Rule"), errors)
+
+location_profiles(ROOT).each do |path, expected|
+  unless File.file?(File.join(ROOT, path)) && File.read(File.join(ROOT, path)) == expected
+    errors << "#{path}: missing or stale; run ruby scripts/generate_profiles.rb"
+    next
+  end
+  check_groups(path, groups(path), errors)
+  check_rule_refs(path, groups(path) + BUILT_INS, errors)
+  check_final(path, entries(path, "Rule"), errors)
+  next unless path == "hong-kong.conf"
+
+  proxy_groups = ["📱 TikTok", "🤖 OpenAI", "🧠 Claude", "💎 Google AI"] + NEW_AI_CASES.values
+  entries(path, "Proxy Group").grep(/= select,/).each do |line|
+    name = line.split("=", 2).first.strip
+    expected_default = proxy_groups.include?(name) ? "🇺🇸 US Node" : "DIRECT"
+    errors << "#{path}: wrong default for #{name}" unless group_members(line).first == expected_default && line.split(",").include?("select=0")
+  end
+  rules = entries(path, "Rule")
+  defaults = entries(path, "Proxy Group").to_h { |line| [line.split("=", 2).first.strip, group_members(line).first] }
+  rules.reject { |line| proxy_groups.include?(rule_policy(line)) }.each do |line|
+    policy = rule_policy(line)
+    errors << "#{path}: non-AI/TikTok rule must default to DIRECT: #{line}" unless defaults.fetch(policy, policy) == "DIRECT"
+  end
+  rules.select { |line| proxy_groups.include?(rule_policy(line)) }.each do |line|
+    errors << "#{path}: proxy routes must use narrow domain rules" unless %w[DOMAIN DOMAIN-SUFFIX].include?(normalized_rule(line).first)
+  end
+  {
+    "www.tiktok.com" => "📱 TikTok", "api.tiktokv.com" => "📱 TikTok",
+    "video.tiktokcdn.com" => "📱 TikTok", "p1-tt.byteimg.com" => "📱 TikTok",
+    "api.anthropic.com" => "🧠 Claude", "claude.ai" => "🧠 Claude",
+    "gemini.google.com" => "💎 Google AI", "aistudio.google.com" => "💎 Google AI",
+    "generativelanguage.googleapis.com" => "💎 Google AI",
+    "api.githubcopilot.com" => "🧑‍💻 GitHub Copilot",
+    "api.github.com" => nil, "www.capcut.com" => nil, "www.bytedance.com" => nil,
+    "www.douyin.com" => nil, "other.byteimg.com" => nil, "cocacola.co.jp" => nil,
+    "api.snapkit.com" => nil, "engagements.appsflyer.com" => nil,
+    "cdn.usefathom.com" => nil, "apis.google.com" => nil,
+    "colab.example.com" => nil, "developerprofiles.example.com" => nil
+  }.each do |host, policy|
+    actual = matching_domain_rule(rules, host)&.[](2)
+    errors << "#{path}: routing case #{host} expected #{policy.inspect}, got #{actual.inspect}" unless actual == policy
+  end
+end
 
 available_modules = Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| File.basename(path, ".module") }
 selected_modules = ARGV.map { |arg| File.basename(arg, ".module") }.uniq
