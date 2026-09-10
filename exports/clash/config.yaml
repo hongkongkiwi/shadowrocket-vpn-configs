@@ -1,11 +1,11 @@
 # mihomo / Clash.Meta / Clash Verge Rev / Stash config
 # Mirror of shadowrocket.conf — same groups, same rule sources.
 # Rule sources: blackmatrix7 (Clash yaml payload format) + MetaCubeX meta-rules-dat (.mrs binaries).
-# Add your subscription: Clash Verge → Profiles → import your airport's subscription,
-# then add this file as a second profile or merge it (proxy-groups reference proxies by name).
+# Merge this file with the profile that supplies your proxies. Separate profile cards
+# do not combine nodes, groups, providers, or rules.
 #
-# NOTE on DNS: mihomo does its own DNS. fake-ip + nameservers below are standard
-# China setup (AliDNS + Tencent DoH). With fake-ip-filter covering Apple push etc.
+# NOTE on DNS: mihomo does its own DNS. The fake-IP exclusions keep selected
+# LAN, connectivity-check, gaming, carrier, and Apple hosts on real addresses.
 
 mixed-port: 7890
 allow-lan: false
@@ -22,10 +22,14 @@ geox-url:
 
 dns:
   enable: true
-  listen: 0.0.0.0:1053
+  listen: 127.0.0.1:1053
   ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  # Used only to resolve DoH hostnames before the encrypted resolvers are ready.
+  default-nameserver:
+    - "223.5.5.5"
+    - "119.29.29.29"
   fake-ip-filter:
     - "*.lan"
     - "*.local"
@@ -50,10 +54,8 @@ dns:
     - "auth.wosms.cn"
     - "+.10099.com.cn"
   nameserver:
-    - "https://doh.pub/dns-query"
+    - "https://1.1.1.1/dns-query"
     - "https://dns.alidns.com/dns-query"
-    - "223.5.5.5"
-    - "119.29.29.29"
 
 proxy-groups:
   # PROXY = every node from your imported subscription (include-all)
@@ -62,43 +64,43 @@ proxy-groups:
     include-all: true
   - name: "🌍 Foreign Websites"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "📽️ International Media"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "📱 TikTok"
     type: select
-    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇨🇳 Taiwan Node, DIRECT]
+    proxies: [🇺🇸 US Node, PROXY, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🖥️ Microsoft Services"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🌌 Google Services"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "📟 Telegram Messages"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🐦 Twitter Messages"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🤖 AI"
     type: select
-    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇭🇰 Hong Kong Node, 🇹🇼 Taiwan Node]
   - name: "🎮 Gaming Platforms"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "📽️ Emby"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🎵 Spotify"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node]
   - name: "🍎 Apple Services"
     type: select
     proxies: [DIRECT, PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node]
   - name: "🐟 Fallback Routing"
     type: select
-    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇨🇳 Taiwan Node, DIRECT]
+    proxies: [PROXY, 🇭🇰 Hong Kong Node, 🇺🇸 US Node, 🇸🇬 Singapore Node, 🇯🇵 Japan Node, 🇹🇼 Taiwan Node, DIRECT]
   - name: "🇭🇰 Hong Kong Node"
     type: url-test
     url: "http://1.1.1.1/generate_204"
@@ -127,19 +129,19 @@ proxy-groups:
     tolerance: 50
     include-all: true
     filter: "(?i)🇯🇵|日本|东京|(\\b(JP|Japan)\\b)"
-  - name: "🇨🇳 Taiwan Node"
+  - name: "🇹🇼 Taiwan Node"
     type: url-test
     url: "http://1.1.1.1/generate_204"
     interval: 300
     tolerance: 50
     include-all: true
-    filter: "(?i)🇨🇳|🇹🇼|台湾|(\\b(TW|Tai|Taiwan)\\b)"
+    filter: "(?i)🇹🇼|台湾|(\\b(TW|Tai|Taiwan)\\b)"
 
 rule-providers:
   ai-vpsdance:
     type: http
     behavior: classical
-    format: text
+    format: yaml
     url: "https://cdn.jsdelivr.net/gh/VPSDance/ai-proxy-rules@main/rules/clash/global.yaml"
     interval: 86400
     path: ./rules/ai-vpsdance.yaml
@@ -327,12 +329,12 @@ rule-providers:
     path: ./rules/lan.yaml
 
 rules:
-  # AI first (broadest list wins)
+  # Ads first so overlaps such as segment.io stay rejected.
+  - RULE-SET,ads,REJECT
+  # AI
   - RULE-SET,ai-vpsdance,🤖 AI
   - RULE-SET,ai-openai,🤖 AI
   - RULE-SET,ai-claude,🤖 AI
-  # Ads — module-equivalent, comment out to disable
-  - RULE-SET,ads,REJECT
   # LAN
   - RULE-SET,lan,DIRECT
   # Services
@@ -353,16 +355,15 @@ rules:
   - RULE-SET,emby,📽️ Emby
   - RULE-SET,steam,🎮 Gaming Platforms
   - RULE-SET,epic,🎮 Gaming Platforms
-  # Apple push first, rest of Apple after (mirrors Apple-Push + AppleCN/AppleServers order)
-  - RULE-SET,apple,🍎 Apple Services
-  - RULE-SET,applecn,🍎 Apple Services
-  # Apple Intelligence / Private Cloud Compute / iCloud gateway - keep DIRECT
+  # Apple direct exceptions precede the broad lists.
   - DOMAIN-SUFFIX,gateway.icloud.com,DIRECT
   - DOMAIN,apple-relay.cloudflare.com,DIRECT
   - DOMAIN,cp4.cloudflare.com,DIRECT
   - DOMAIN,apple-relay.fastly-edge.com,DIRECT
   - DOMAIN,gdmf.apple.com,DIRECT
   - DOMAIN,swscan.apple.com,DIRECT
+  - RULE-SET,apple,🍎 Apple Services
+  - RULE-SET,applecn,🍎 Apple Services
   # CN direct (domain first, then geo fallback)
   - RULE-SET,chinadirect,DIRECT
   - RULE-SET,cn-ip,DIRECT,no-resolve

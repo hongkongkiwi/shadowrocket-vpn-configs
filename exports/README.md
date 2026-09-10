@@ -1,44 +1,115 @@
-# Exports — same rules, other apps
+# Client exports
 
-The Shadowrocket config is the source of truth. These exports mirror it for
-other clients. Rule lists are platform-native from the same upstream sources
-(blackmatrix7 / Repcz / VPSDance / MetaCubeX), so coverage stays in sync across
-apps — only the wrapper differs.
+These files port the routing intent in `../shadowrocket.conf` to other proxy
+clients. They are hand-maintained because mihomo, Surge, and Quantumult X do
+not share one policy or remote-resource format.
 
-**All exports contain zero nodes.** Add your subscription in each app natively.
+None of the exports contains a node or a real subscription URL.
 
-| App | File | Format | Rule source used |
-|---|---|---|---|
-| Clash Verge Rev / Clash Meta (mihomo) / Stash / ClashMi | [`clash/config.yaml`](clash/config.yaml) | YAML + rule-providers | blackmatrix7 Clash yaml + MetaCubeX .mrs |
-| Surge iOS 5+ / Surge Mac 5+ | [`surge/Surge.conf`](surge/Surge.conf) | Surge conf | Repcz Surge lists + blackmatrix7 Surge lists |
-| Quantumult X | [`quantumultx/QuantumultX.conf`](quantumultx/QuantumultX.conf) | QX conf + remote filters | blackmatrix7 QuantumultX lists |
+> [!NOTE]
+> The 2026-09-10 repair pass cleared the known static and provider failures.
+> Surge and Quantumult X still need native import tests. mihomo still needs a
+> real merged subscription before its routing behavior can be proven.
 
-## Import notes
+| Client | Proven | Not yet proven |
+|---|---|---|
+| mihomo 1.19.30 | YAML load, process startup, 27 provider downloads and parses | Behavior with a real merged node subscription |
+| Surge 5+ | Static comparison with current vendor docs | Native import, policy resolution, runtime routing |
+| Quantumult X | Static comparison, local policy checks, remote source checks | Native import, regional population, runtime routing |
 
-- **Clash/mihomo**: import as a profile, then add your subscription URL to the
-  proxy list (Verge Rev: Profiles → +; group `PROXY` in this file is a stub —
-  replace with your subscription's proxy names or use `include-all` groups).
-  Ads block via `RULE-SET,ads,REJECT` — delete that line to "toggle off".
-- **Surge**: edit the `PROXY = select, policy-path=...` line to your real
-  subscription URL after import. Modules like `Ads_SukkaW` from Repcz's Surge
-  setup can be added for pre-matching adblock.
-- **Quantumult X**: add subscription in the Server tab; groups reference
-  `proxy`. blackmatrix7 QX lists embed policy names in every line — group names
-  in `[policy]` match them exactly. AI lists use `force-policy=` to remap
-  OpenAI/Claude lists into our single 🤖 AI group.
+## mihomo / Clash Meta
 
-## Caveats
+File: [`clash/config.yaml`](clash/config.yaml)
 
-- QX/Surge param spellings drift between app versions; if a key errors, check
-  the app's in-app docs. All rule-list URLs were verified live (2026-09-10).
-- mihomo runs its own DNS (fake-ip + DoH here). Apple push / carrier domains
-  are in `fake-ip-filter`, mirroring the Shadowrocket `always-real-ip` list.
-- Loon: not exported yet — its remote-rule syntax differs again. Same rule
-  sources apply (Surge-format lists work); ask if needed.
+Use this as a merge fragment with the profile that supplies your nodes. Adding
+it as a separate profile does not combine its rules with another profile's
+proxies. The `PROXY` and regional groups use `include-all`, so they populate
+only after the final merged profile contains proxies or proxy providers.
 
-## Keeping exports in sync
+Use your client's merge or mixin feature, or merge the YAML top-level sections
+yourself. The final rendered profile must contain `proxies:` or
+`proxy-providers:` alongside this file's `proxy-groups:`, `rule-providers:`,
+and `rules:` sections. Inspect the rendered profile; do not assume two profile
+cards are combined.
 
-Groups and rule order are duplicated intentionally (different engines, can't
-share). When changing the Shadowrocket config's *groups or rule order*, apply
-the same change to each export. Rule *content* needs no maintenance — it all
-updates upstream daily.
+Current check result:
+
+- Ruby's YAML parser accepts the file.
+- mihomo 1.19.30 accepts the structure, starts, downloads all 27 providers, and
+  reports no provider parse errors. The VPSDance source now declares
+  `format: yaml`.
+- DNS listens on `127.0.0.1:1053`. Plain IP resolvers sit under
+  `default-nameserver` only to bootstrap the DoH hostname; ordinary queries use
+  the configured DoH resolvers.
+- The profile has no nodes by itself, so empty groups fall back to mihomo's
+  `COMPATIBLE` behavior.
+- The Taiwan selector no longer matches the mainland China flag.
+
+After merging, test with the same mihomo build your GUI ships. A standalone
+`mihomo -t` check does not fetch providers, so run the profile long enough to
+catch remote parse warnings.
+
+## Surge 5+
+
+File: [`surge/Surge.conf`](surge/Surge.conf)
+
+The `PROXY = select, DIRECT` line is a safe placeholder. Replace `DIRECT` with
+named proxies or a `policy-path=...` subscription before expecting traffic to
+use a tunnel.
+
+Current check result:
+
+- Rule targets match declared policy-group names exactly.
+- The dead Apple Push source is gone. The remaining Apple lists already cover
+  APNs domains and Apple's `17.0.0.0/8` range.
+- Exact Apple direct rules run before the broad Apple lists.
+- With the untouched `DIRECT` placeholder, every group that selects `PROXY`
+  connects directly.
+- The Taiwan selector no longer matches the mainland China flag.
+
+Use Surge's profile checker after replacing the subscription. Then inspect the
+rule log for one request in each policy group; a profile that imports can still
+route through the wrong group.
+
+## Quantumult X
+
+File: [`quantumultx/QuantumultX.conf`](quantumultx/QuantumultX.conf)
+
+Nodes added in Quantumult X's Server tab appear through the built-in `proxy`
+candidate. Remote blackmatrix7 filters carry a policy name on every rule; use
+`force-policy=` when the file's policy is not defined locally.
+
+Current check result:
+
+- Regional groups use `url-latency-benchmark=` with the vendor sample's
+  hyphenated parameter names.
+- Advertising and Privacy force `reject`. Lan and ChinaMax force `direct`.
+- OneDrive and Prime Video now have policies and remote filters.
+- DoH is enabled. Quantumult X ignores the ordinary `server` entries for normal
+  queries while an unscoped `doh-server` is active.
+- Excluded routes have explicit CIDR masks.
+- The Taiwan selector no longer matches the mainland China flag.
+
+Do not call this export validated until Quantumult X imports it without errors,
+all regional groups populate, and the request log proves direct, proxy, reject,
+and final behavior.
+
+## Parity rules
+
+“Same rules” means matching user intent, not copying line order blindly.
+
+When `shadowrocket.conf` changes:
+
+1. Add or rename equivalent policy groups in every export.
+2. Preserve first-match behavior around reject, Apple, China, and final rules.
+3. Use a native rule source for each client and inspect its embedded policy.
+4. Reproduce DNS and QUIC behavior only where the target client supports it.
+5. Record what the export omits instead of claiming identical coverage.
+6. Run the target client, fetch every remote resource, and inspect its logs.
+
+Useful vendor references:
+
+- [mihomo rule providers](https://wiki.metacubex.one/en/config/rule-providers/)
+- [mihomo proxy groups](https://wiki.metacubex.one/en/config/proxy-groups/)
+- [Surge rule sets](https://manual.nssurge.com/rules/ruleset.html)
+- [Quantumult X sample configuration](https://github.com/crossutility/Quantumult-X/blob/master/sample.conf)

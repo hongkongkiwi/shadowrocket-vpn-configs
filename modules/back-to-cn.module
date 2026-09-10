@@ -8,5 +8,5 @@
 [Rule]
 # China domains via proxy (carrnot list, from dnsmasq-china-list)
 RULE-SET,https://raw.githubusercontent.com/carrnot/china-domain-list/release/rocket.txt,🇨🇳 CN Node
-# China IPs via proxy (disable GEOIP,CN,DIRECT conflict — module rules outrank config, so these win)
-RULE-SET,https://raw.githubusercontent.com/carrnot/china-ip-list/release/ip.txt,🇨🇳 CN Node
+# China IPs via proxy (Shadowrocket-native IP-CIDR rules)
+RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Shadowrocket/ChinaIPs/ChinaIPs.list,🇨🇳 CN Node
