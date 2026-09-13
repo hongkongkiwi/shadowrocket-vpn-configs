@@ -49,7 +49,8 @@ Remote downloads stay in the manual/weekly source audit. CI runs the offline
 checks even when local hooks aren't installed.
 
 `--mainland-routing` downloads and expands the mainland profile's pinned lists
-for 30 domain-routing cases. It runs in the manual/weekly audit; IP and user-agent
+for 30 domain-routing cases. The full manual/weekly audit also checks these cases,
+reusing its downloaded payloads. IP and user-agent
 matches, saved selections, modules, and native traffic remain outside this test.
 
 To check a stack, pass module names in top-to-bottom order, for example
