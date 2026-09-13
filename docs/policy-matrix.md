@@ -4,12 +4,14 @@ Shadowrocket has two location profiles and a minimal `default.conf` profile.
 Default has only `FINAL,PROXY`, local-network exclusions, and no custom DNS or
 service rules; unsupported proxy UDP is rejected. `hong-kong.conf` defaults only AI and
 international TikTok to a proxy, with everything else direct; `mainland-china.conf`
-keeps the legacy routing defaults. Both include location-specific DNS. Optional
+uses direct fallback and explicit overseas-service proxy rules. Alipay routes directly;
+Microsoft, game downloads, and Emby default to direct. Generic CDN and foreign-site
+lists are omitted, and ChinaMax domains precede broad service lists. Both include location-specific DNS. Optional
 modules and saved selections can override their defaults. The table below
 describes the shared legacy policy and unsplit exports. Neither new location
 profile has native import or live traffic proof yet.
 
-Hong Kong replaces the upstream Claude, Gemini, and TikTok lists with reviewed
+Both location profiles replace the upstream Claude, Gemini, and TikTok lists with reviewed
 domain rules in `rules/hong-kong-proxy.list`. Shared analytics, generic Google
 APIs, CapCut, broad ByteDance domains, keywords, and ASN rules are excluded.
 Shared dependencies may need observed-host overrides after native testing.

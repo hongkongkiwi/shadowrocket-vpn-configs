@@ -17,7 +17,10 @@ together with source changes. The validator rejects missing or stale profiles.
 Hong Kong changes ordinary selectors to `DIRECT`, retaining `PROXY` defaults only for
 AI and international TikTok. It replaces three broad remote lists with
 `rules/hong-kong-proxy.list`; all other routing rules stay shared. Each
-profile has its own DNS settings and self-update URL. The legacy URL remains
+profile has its own DNS settings and self-update URL. Mainland also uses
+`rules/mainland-china.list`, removes the generic CDN/Proxy lists, moves ChinaMax
+domains before broad service lists, defaults Microsoft/Gaming/Emby to direct,
+and uses a literal `FINAL,DIRECT` independent of saved fallback selections. The legacy URL remains
 available. The other client exports have not been split by location.
 
 Run:

@@ -5,6 +5,9 @@ PROXIED_SERVICE_GROUPS = [
   "🪟 Microsoft Copilot", "🖱️ Cursor", "🔍 Perplexity", "𝕏 xAI / Grok",
   "🤗 Hugging Face", "🏄 Windsurf", "🧠 JetBrains AI"
 ].freeze
+MAINLAND_DIRECT_GROUPS = [
+  "🖥️ Microsoft Services", "🎮 Gaming Platforms", "📽️ Emby", "🐟 Fallback Routing"
+].freeze
 
 # Keep routing rules in one source; publish two complete location profiles.
 def location_profiles(root)
@@ -21,17 +24,32 @@ def location_profiles(root)
     body.sub!("[General]\n", "[General]\n#{dns}\n")
     body.sub!(%r{(?<=update-url = )[^\n]+},
       "https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/#{slug}.conf")
-    if slug == "hong-kong"
+    # Both locations use narrow AI/TikTok rules instead of shared-service matches.
+    body = body.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join
+    narrow_rules = File.read(File.join(root, "rules/hong-kong-proxy.list"))
+    body.sub!("[Rule]\n", "[Rule]\n#{narrow_rules}\n")
+    if slug == "mainland-china"
+      body.gsub!(/^(.*) = select,([^\n]+)/) do
+        name, fields = Regexp.last_match(1), Regexp.last_match(2).split(",")
+        default = MAINLAND_DIRECT_GROUPS.include?(name) ? "DIRECT" : "PROXY"
+        "#{name} = select,#{default},#{fields.reject { |field| field == default }.join(',')}"
+      end
+      body = body.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:CDN|Proxy)\.list,}) }.join
+      # A saved fallback selector must not turn unmatched traffic into a proxy route.
+      body.sub!("FINAL,🐟 Fallback Routing", "FINAL,DIRECT")
+      mainland_rules = File.read(File.join(root, "rules/mainland-china.list"))
+      body.sub!("[Rule]\n", "[Rule]\n#{mainland_rules}\n")
+      # Domestic domain matches precede broad service lists without forcing early IP resolution.
+      china_domains = body.lines.find { |line| line.start_with?("DOMAIN-SET,") && line.include?("/ChinaMax/") }
+      body.sub!(china_domains, "")
+      body.sub!("// --- Services ---", "#{china_domains}// --- Services ---")
+    else
       # Choose by service, independently of the source profile's candidate order.
       body.gsub!(/^(.*) = select,([^\n]+)/) do
         name, fields = Regexp.last_match(1), Regexp.last_match(2).split(",")
         default = PROXIED_SERVICE_GROUPS.include?(name) ? "PROXY" : "DIRECT"
         "#{name} = select,#{default},#{fields.reject { |field| field == default }.join(',')}"
       end
-      # The upstream lists include shared services and whole-network matches.
-      body = body.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join
-      narrow_rules = File.read(File.join(root, "rules/hong-kong-proxy.list"))
-      body.sub!("[Rule]\n", "[Rule]\n#{narrow_rules}\n")
     end
     ["#{slug}.conf", body]
   end

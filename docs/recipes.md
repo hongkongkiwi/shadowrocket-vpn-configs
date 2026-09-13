@@ -104,7 +104,23 @@ does not provide a mainland IP when you're in Hong Kong.
 ## Mainland China
 
 Use [`mainland-china.conf`](../mainland-china.conf) while in mainland China.
-It includes mainland DNS, so leave DNS modules off.
+It includes mainland DNS, so leave DNS modules off. Use Shadowrocket's **Config**
+routing mode so these rules apply. **Proxy** mode sends traffic through the proxy
+regardless of this profile's direct rules.
+
+Unmatched traffic uses `FINAL,DIRECT`. Alipay has early direct domain rules, and
+ChinaMax domain matches precede broad service lists. AI, international TikTok,
+Google, GitHub, messaging, selected social sites, and overseas streaming keep
+proxy defaults. Microsoft, game downloads, and Emby default to `DIRECT`;
+Steam Community has a separate proxy rule. Generic CDN and foreign-site lists
+are omitted. An unlisted blocked site needs a narrow hostname rule.
+
+After updating, reset Microsoft, Gaming Platforms, and Emby selectors to `DIRECT`
+if Shadowrocket retained your old selections. Keep `back-to-cn`, `back-to-cn-all`,
+and `soul-ktv` disabled while physically in mainland China. Optional modules can
+override the profile, including its Alipay routes. If Alipay still fails, disable
+optional modules temporarily and inspect its connection log before adding rules.
+Direct routing does not hide the active VPN from apps or prove payment flows work.
 
 ```text
 adblock-core (or adblock-lite)

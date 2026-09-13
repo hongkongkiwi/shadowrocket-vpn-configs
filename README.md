@@ -10,7 +10,7 @@ certificates, or MITM private keys.
 1. Add your proxy subscription in Shadowrocket.
 2. Import both profiles, then select the one for your current location:
    - [Hong Kong](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/hong-kong.conf): [`hong-kong.conf`](hong-kong.conf). Only AI and international TikTok default to a proxy. Everything else, including GitHub, streaming, gaming, and unmatched traffic, defaults to `DIRECT`. Includes Cloudflare/Quad9 DNS.
-   - [Mainland China](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/mainland-china.conf): [`mainland-china.conf`](mainland-china.conf). Local network and ChinaMax/China-IP matches route directly unless an earlier service rule applies; international services and unmatched traffic default to a proxy. Includes AliDNS/DNSPod DNS.
+   - [Mainland China](https://raw.githubusercontent.com/hongkongkiwi/shadowrocket-vpn-configs/main/mainland-china.conf): [`mainland-china.conf`](mainland-china.conf). Uses `FINAL,DIRECT`: unmatched traffic stays direct. Explicit AI, international TikTok, Google, GitHub, messaging, social, and overseas streaming routes use your selected proxy. Alipay has early direct rules; Microsoft, game downloads, and Emby default to direct. Generic CDN and broad foreign-site lists are omitted. Includes AliDNS/DNSPod DNS.
 3. Import and order modules using [`docs/recipes.md`](docs/recipes.md).
 4. Run `ruby scripts/validate_configs.rb` before sharing a profile.
 
@@ -36,7 +36,7 @@ replace any saved regional selection.
 The old `shadowrocket.conf` URL remains available as the shared source used to
 generate both location profiles. It and the other client exports also default
 AI and TikTok to the selected proxy. The exports have not been split by location.
-Hong Kong uses reviewed inline Claude, Google AI, and international TikTok rules
+Both location profiles use reviewed inline Claude, Google AI, and international TikTok rules
 to avoid proxying unrelated services in their upstream lists. Shared CDN and
 login hosts stay direct; add a narrow local override only for an observed failure.
 
