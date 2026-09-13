@@ -37,8 +37,8 @@ Keep those hosts in their existing service policy rather than enabling MITM.
 
 ## Hong Kong proxy boundaries
 
-`rules/hong-kong-proxy.list` replaces three remote lists only in the generated
-Hong Kong profile. The review used the pinned
+`rules/hong-kong-proxy.list` replaces three remote lists in both generated
+location profiles. The review used the pinned
 [TikTok inventory](https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/TikTok.list),
 [Claude inventory](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Claude/Claude.list), and
 [Gemini inventory](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/Gemini/Gemini.list).
@@ -55,8 +55,8 @@ All remaining remote lists in the Hong Kong profile select `DIRECT` by default.
 This scope keeps unrelated services direct. It does not prove complete native
 TikTok playback, AI login, or shared-CDN coverage. If one fails, inspect the
 failing hostname and add a narrow private override; a blanket ByteDance or
-Google API proxy would undo the requested boundary. Mainland and other client
-profiles retain their previous source lists.
+Google API proxy would undo the requested boundary. Mainland reuses the same narrow AI/TikTok rules. The legacy source and other
+client exports retain their previous source lists.
 
 ## Optional routing modules
 
@@ -103,3 +103,28 @@ reports. Compare decoded text equivalents for binary providers, then load the
 binary with the native client. Update this record, the inline rules where
 applicable, and all affected exports together. Run the checks in
 [maintenance](maintenance.md), including the hostname-policy regressions.
+
+## Mainland selective routing (2026-09-14)
+
+`rules/mainland-china.list` contains an explicit subset of service domains from
+[Repcz Proxy.list](https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/Proxy.list).
+It covers Meta services, WhatsApp, Reddit, Discord, Signal, Wikipedia/Wikimedia,
+Dropbox, Proton, and Steam Community. These are configured proxy exceptions,
+not a claim that every endpoint is blocked on every mainland network.
+Alipay's early direct suffixes come from the pinned
+[blackmatrix7 AliPay inventory](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/4112f8e7b3a9f23c9ccf381beaa5931a36df3781/rule/Shadowrocket/AliPay/AliPay.list).
+Other Alipay domains use the ordinary direct fallback unless another rule matches.
+
+The profile no longer imports the generic Proxy or CDN lists. Those inventories
+include shared services; for example, the CDN list contains
+`cdnstatic.tencentcs.com`. Even ProxyGFW includes all `amazonaws.com` tenants,
+so it is not used as a substitute. Existing named service lists remain pinned;
+ChinaMax domain rules precede them, while specific AI routes stay ahead of
+ChinaMax. Microsoft, Gaming, and Emby selectors start on direct. Unmatched
+traffic is always `FINAL,DIRECT`, regardless of the saved fallback selector.
+
+This does not prove Alipay login/payment behavior on a device. Use Config mode,
+check saved selector choices, and disable optional routing/blocking modules
+while diagnosing. Module rules precede profile rules, as described by the
+[upstream rule documentation](https://doc.repcz.link/shadowrocket/rule/).
+An unlisted blocked service may need an observed-host proxy override.

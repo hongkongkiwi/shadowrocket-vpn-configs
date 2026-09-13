@@ -17,7 +17,10 @@ together with source changes. The validator rejects missing or stale profiles.
 Hong Kong changes ordinary selectors to `DIRECT`, retaining `PROXY` defaults only for
 AI and international TikTok. It replaces three broad remote lists with
 `rules/hong-kong-proxy.list`; all other routing rules stay shared. Each
-profile has its own DNS settings and self-update URL. The legacy URL remains
+profile has its own DNS settings and self-update URL. Mainland also uses
+`rules/mainland-china.list`, removes the generic CDN/Proxy lists, moves ChinaMax
+domains before broad service lists, defaults Microsoft/Gaming/Emby to direct,
+and uses a literal `FINAL,DIRECT` independent of saved fallback selections. The legacy URL remains
 available. The other client exports have not been split by location.
 
 Run:
@@ -28,6 +31,7 @@ ruby scripts/validate_configs.rb
 ruby scripts/test_config_validation.rb
 ruby scripts/validate_soul_module.rb
 ruby scripts/audit_remote_sources.rb --self-test
+ruby scripts/audit_remote_sources.rb --mainland-routing
 ```
 
 Install the local Git hooks once per clone (Ruby and Lefthook are required):
@@ -43,6 +47,11 @@ destination is `main` or `master`; push a feature branch and open a PR. Config
 checks read the working tree, so stage the validated config changes together.
 Remote downloads stay in the manual/weekly source audit. CI runs the offline
 checks even when local hooks aren't installed.
+
+`--mainland-routing` downloads and expands the mainland profile's pinned lists
+for 30 domain-routing cases. The full manual/weekly audit also checks these cases,
+reusing its downloaded payloads. IP and user-agent
+matches, saved selections, modules, and native traffic remain outside this test.
 
 To check a stack, pass module names in top-to-bottom order, for example
 `ruby scripts/validate_configs.rb adblock-core privacy-dns apple-account apple-services`.

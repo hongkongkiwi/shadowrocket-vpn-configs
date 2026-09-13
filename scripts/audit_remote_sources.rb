@@ -8,6 +8,7 @@ require "yaml"
 ROOT = File.expand_path("..", __dir__)
 PATHS = [
   "shadowrocket.conf",
+  "mainland-china.conf",
   *Dir.glob(File.join(ROOT, "modules/*.module")).map { |path| path.delete_prefix("#{ROOT}/") },
   "exports/clash/config.yaml",
   "exports/surge/Surge.conf",
@@ -110,7 +111,7 @@ def audit_payload(url, bytes, urls)
   [count, problems]
 end
 
-def audit_sources(urls)
+def audit_sources(urls, payloads = {})
   queue = Queue.new
   urls.each { |url| queue << url }
   results = []
@@ -121,7 +122,10 @@ def audit_sources(urls)
         url = queue.pop(true)
         bytes = yield url
         active, problems = audit_payload(url, bytes, urls)
-        mutex.synchronize { results << [url, bytes.bytesize, active, Digest::SHA256.hexdigest(bytes), problems] }
+        mutex.synchronize do
+          results << [url, bytes.bytesize, active, Digest::SHA256.hexdigest(bytes), problems]
+          payloads[url] = bytes if payloads.key?(url)
+        end
       rescue ThreadError
         break
       rescue StandardError => e
@@ -133,7 +137,86 @@ def audit_sources(urls)
   results
 end
 
+def expand_domain_rules(rules)
+  rules.flat_map do |line|
+    kind, value, policy = line.split(",").map(&:strip)
+    if %w[RULE-SET DOMAIN-SET].include?(kind.upcase)
+      begin
+        review_rules(value, yield(value)).map { |rule| [*rule.split(",").first(2), policy, value] }
+      rescue StandardError => e
+        raise "source #{value}: #{e.message}"
+      end
+    else
+      [[kind, value, policy]]
+    end
+  end
+end
+
+# Domain-only simulation: IP and user-agent matching need native client testing.
+def domain_rule_policy(rules, host)
+  rules.each do |kind, value, policy, source|
+    kind = kind.upcase.sub(/^HOST/, "DOMAIN")
+    case kind
+    when "FINAL" then return value
+    when "DOMAIN" then return policy if host == value
+    when "DOMAIN-SUFFIX" then return policy if host == value || host.end_with?(".#{value}")
+    when "DOMAIN-KEYWORD" then return policy if host.include?(value)
+    when "DOMAIN-WILDCARD" then return policy if File.fnmatch?(value, host)
+    when "IP-CIDR", "IP-CIDR6", "IP6-CIDR", "IP-ASN", "GEOIP", "USER-AGENT" then next
+    else raise "unsupported domain simulation rule #{kind},#{value} in #{source || 'inline profile'}"
+    end
+  end
+  nil
+end
+
+def check_mainland_routing
+  profile = File.read(File.join(ROOT, "mainland-china.conf"))
+  rules = profile.split("[Rule]\n", 2).fetch(1).split(/^\[/, 2).first.lines.map(&:strip)
+    .reject { |line| line.empty? || line.start_with?("#", ";", "//") }
+  expanded = expand_domain_rules(rules) do |url|
+    yield url
+  end
+  defaults = profile.lines.grep(/ = select,/).to_h { |line| [line.split(" = ").first, line.split(" = ").last.split(",")[1]] }
+  direct = %w[mobilegw.alipay.com mdn.alipayobjects.com www.alipay.hk www.taobao.com www.douyin.com weixin.qq.com yunbusiness.ccb.com www.abchina.com.cn cdnstatic.tencentcs.com merchant.amazonaws.com www.microsoft.com login.live.com steamcontent.com unlisted.example www.baidu.com]
+  proxy = %w[api.openai.com claude.ai gemini.google.com www.tiktok.com api.github.com api.githubcopilot.com www.google.com www.youtube.com www.reddit.com www.facebook.com www.instagram.com www.whatsapp.com steamcommunity.com www.netflix.com telegram.org]
+  cases = direct.to_h { |host| [host, "DIRECT"] }.merge(proxy.to_h { |host| [host, "PROXY"] })
+  cases.each do |host, expected|
+    policy = domain_rule_policy(expanded, host)
+    actual = defaults.fetch(policy, policy)
+    abort "Mainland domain case #{host}: expected #{expected}, got #{actual.inspect}" unless actual == expected
+  end
+  puts "Mainland remote-list domain checks passed (#{cases.length} cases; IP/user-agent matching and native traffic unverified)."
+rescue StandardError => e
+  abort "Mainland domain audit failed: #{e.message}"
+end
+
+if ARGV == ["--mainland-routing"]
+  check_mainland_routing do |url|
+    URI.open(url, read_timeout: 30, open_timeout: 15, redirect: false, &:read)
+  end
+  exit
+end
+
 if ARGV == ["--self-test"]
+  expanded = expand_domain_rules(["HOST-SUFFIX,alipay.com,DIRECT", "RULE-SET,proxy.list,PROXY", "DOMAIN-SET,china.list,DIRECT", "FINAL,DIRECT"]) do |url|
+    url == "proxy.list" ? "host-suffix,amazonaws.com\nDOMAIN-SUFFIX,alipay.com\n" : ".qq.com\n"
+  end
+  begin
+    unsupported = expand_domain_rules(["RULE-SET,unsupported.list,PROXY"]) { "PROCESS-NAME,example" }
+    domain_rule_policy(unsupported, "unlisted.example")
+    raise "accepted unsupported simulation rule"
+  rescue StandardError => e
+    raise unless e.message.include?("PROCESS-NAME,example in unsupported.list")
+  end
+  begin
+    expand_domain_rules(["RULE-SET,broken.list,PROXY"]) { raise "download failed" }
+    raise "missed failed download"
+  rescue StandardError => e
+    raise unless e.message == "source broken.list: download failed"
+  end
+  { "mobilegw.alipay.com" => "DIRECT", "merchant.amazonaws.com" => "PROXY", "weixin.qq.com" => "DIRECT", "unlisted.example" => "DIRECT" }.each do |host, expected|
+    raise "remote-list expansion/order regression for #{host}" unless domain_rule_policy(expanded, host) == expected
+  end
   raise "missed ASN scope" if scope_risks("IP-ASN,14061,no-resolve").empty?
   raise "missed TLD scope" if scope_risks("DOMAIN-SUFFIX,ai").empty?
   raise "missed shared scope" if scope_risks("DOMAIN,api.github.com").empty?
@@ -161,7 +244,9 @@ if ARGV == ["--self-test"]
     raise "accepted invalid response: #{source}" unless rejected
   end
   samples = 18.times.to_h { |n| ["https://example.com/#{n}.yaml", "payload: ['DOMAIN,host#{n}.example']"] }
-  results = audit_sources(samples.keys) { |source| Thread.pass; samples.fetch(source) }
+  cached = { samples.keys.first => nil }
+  results = audit_sources(samples.keys, cached) { |source| Thread.pass; samples.fetch(source) }
+  raise "lost/redundant cached payload" unless cached == { samples.keys.first => samples.values.first }
   raise "lost parallel result" unless results.map(&:first).sort == samples.keys.sort
   results.each do |source, size, count, digest, problems|
     raise "parallel download attributed to wrong URL" unless size == samples.fetch(source).bytesize && count == 1 && digest == Digest::SHA256.hexdigest(samples.fetch(source)) && problems.empty?
@@ -185,7 +270,7 @@ if ARGV.first == "--compare" && ARGV.length == 3
   end
   exit
 end
-abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test | --compare OLD_FILE NEW_FILE]" unless ARGV.empty?
+abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test | --mainland-routing | --compare OLD_FILE NEW_FILE]" unless ARGV.empty?
 
 urls = PATHS.flat_map do |path|
   File.readlines(File.join(ROOT, path)).reject { |line| line.strip.start_with?("#", ";", "//", "update-url =") }
@@ -194,7 +279,9 @@ end
 urls.select! { |url| SOURCE_HOSTS.include?(URI(url).host) }
 urls.uniq!
 
-results = audit_sources(urls) do |url|
+# Retain only mainland payloads, then reuse the exact audited bytes for routing.
+payloads = File.read(File.join(ROOT, "mainland-china.conf")).scan(/^(?:RULE-SET|DOMAIN-SET),([^,]+),/i).flatten.to_h { |url| [url.strip, nil] }
+results = audit_sources(urls, payloads) do |url|
   URI.open(url, read_timeout: 30, open_timeout: 15, redirect: false, &:read)
 end
 
@@ -209,3 +296,4 @@ end
 
 abort failures.join("\n") unless failures.empty?
 puts "Remote source audit passed (#{results.length} unique URLs; binary decoding requires native client validation)."
+check_mainland_routing { |url| payloads.fetch(url) }

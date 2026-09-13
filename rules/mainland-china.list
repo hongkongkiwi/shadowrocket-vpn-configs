@@ -1,0 +1,39 @@
+# Mainland overrides. Reviewed 2026-09-14; sources and limits: docs/rule-sources.md.
+# Alipay must stay direct before service rules, including on non-China IPs.
+DOMAIN-SUFFIX,alipay.cn,DIRECT
+DOMAIN-SUFFIX,alipay.com,DIRECT
+DOMAIN-SUFFIX,alipay.com.cn,DIRECT
+DOMAIN-SUFFIX,alipay.hk,DIRECT
+DOMAIN-SUFFIX,alipay.net,DIRECT
+DOMAIN-SUFFIX,alipaydns.com,DIRECT
+DOMAIN-SUFFIX,alipayobjects.com,DIRECT
+DOMAIN-SUFFIX,alipayplus.com,DIRECT
+# Explicit overseas services; no blanket CDN, shared-cloud, keyword, or ASN rules.
+DOMAIN-SUFFIX,facebook.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,facebook.net,🌏 Foreign Websites
+DOMAIN-SUFFIX,fbcdn.net,🌏 Foreign Websites
+DOMAIN-SUFFIX,messenger.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,instagram.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,cdninstagram.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,threads.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,threads.net,🌏 Foreign Websites
+DOMAIN-SUFFIX,whatsapp.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,whatsapp.net,🌏 Foreign Websites
+DOMAIN-SUFFIX,reddit.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,redd.it,🌏 Foreign Websites
+DOMAIN-SUFFIX,redditmedia.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,redditstatic.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,discord.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,discord.gg,🌏 Foreign Websites
+DOMAIN-SUFFIX,discordapp.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,discordapp.net,🌏 Foreign Websites
+DOMAIN-SUFFIX,signal.org,🌏 Foreign Websites
+DOMAIN-SUFFIX,wikipedia.org,🌏 Foreign Websites
+DOMAIN-SUFFIX,wikimedia.org,🌏 Foreign Websites
+DOMAIN-SUFFIX,dropbox.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,dropboxapi.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,dropboxusercontent.com,🌏 Foreign Websites
+DOMAIN-SUFFIX,proton.me,🌏 Foreign Websites
+DOMAIN-SUFFIX,protonmail.com,🌏 Foreign Websites
+# Steam Community uses the proxy; game downloads keep their direct default.
+DOMAIN-SUFFIX,steamcommunity.com,🌏 Foreign Websites

@@ -156,6 +156,44 @@ location_profiles(ROOT).each do |path, expected|
   check_groups(path, groups(path), errors)
   check_rule_refs(path, groups(path) + BUILT_INS, errors)
   check_final(path, entries(path, "Rule"), errors)
+  if path == "mainland-china.conf"
+    rules = entries(path, "Rule")
+    errors << "#{path}: unmatched traffic must be DIRECT" unless rules.last == "FINAL,DIRECT"
+    entries(path, "Proxy Group").grep(/= select,/).each do |line|
+      name = line.split("=", 2).first.strip
+      expected_default = MAINLAND_DIRECT_GROUPS.include?(name) ? "DIRECT" : "PROXY"
+      errors << "#{path}: wrong default for #{name}" unless group_members(line).first == expected_default && line.split(",").include?("select=0")
+    end
+    narrow_groups = PROXIED_SERVICE_GROUPS + ["🌏 Foreign Websites"]
+    rules.select { |line| narrow_groups.include?(rule_policy(line)) }.each do |line|
+      errors << "#{path}: AI/TikTok/foreign routes must use narrow domain rules" unless %w[DOMAIN DOMAIN-SUFFIX].include?(normalized_rule(line).first)
+    end
+    first_remote = rules.index { |line| line.start_with?("RULE-SET,", "DOMAIN-SET,") }
+    # Keep required hosts independent of the source so deleting a rule still fails.
+    required_alipay = %w[alipay.cn alipay.com alipay.com.cn alipay.hk alipay.net alipaydns.com alipayobjects.com alipayplus.com]
+    extra_alipay = lines("rules/mainland-china.list").map { |line| normalized_rule(line) }.select { |kind, host, _| kind == "DOMAIN-SUFFIX" && host.start_with?("alipay") }.map { |_, host, _| host }
+    (required_alipay + extra_alipay).uniq.each do |host|
+      match = matching_domain_rule(rules, "test.#{host}")
+      match_index = rules.index { |line| normalized_rule(line) == match }
+      errors << "#{path}: Alipay must be DIRECT before remote rules: #{host}" unless match && match[2] == "DIRECT" && match_index && first_remote && match_index < first_remote
+    end
+    # Inline scope only. --mainland-routing in audit_remote_sources.rb expands remote lists.
+    {
+      "api.openai.com" => "🤖 OpenAI", "claude.ai" => "🧠 Claude",
+      "gemini.google.com" => "💎 Google AI", "www.tiktok.com" => "📱 TikTok",
+      "www.reddit.com" => "🌏 Foreign Websites", "steamcommunity.com" => "🌏 Foreign Websites",
+      "www.facebook.com" => "🌏 Foreign Websites", "www.whatsapp.com" => "🌏 Foreign Websites",
+      "merchant.amazonaws.com" => nil, "cdnstatic.tencentcs.com" => nil,
+      "www.douyin.com" => nil, "www.taobao.com" => nil, "www.microsoft.com" => nil,
+      "steamcontent.com" => nil, "unlisted.example" => nil
+    }.each do |host, policy|
+      actual = matching_domain_rule(rules, host)&.[](2)
+      errors << "#{path}: routing case #{host} expected #{policy.inspect}, got #{actual.inspect}" unless actual == policy
+    end
+    china_index = rules.index { |line| line.start_with?("DOMAIN-SET,") && line.include?("/ChinaMax/") }
+    service_index = rules.index { |line| line.include?("/Telegram.list,") }
+    errors << "#{path}: China domains must precede broad service rules" unless china_index && service_index && china_index < service_index
+  end
   next unless path == "hong-kong.conf"
 
   proxy_groups = PROXIED_SERVICE_GROUPS

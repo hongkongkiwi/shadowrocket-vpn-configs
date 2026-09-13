@@ -48,16 +48,22 @@ base = File.read(File.join(root, "shadowrocket.conf"))
   profile = File.read(File.join(root, "#{location}.conf"))
   actual_rules = profile.split("[Rule]\n", 2).last
   expected_rules = base.split("[Rule]\n", 2).last
-  if location == "hong-kong"
-    actual_rules = actual_rules.delete_prefix("#{File.read(File.join(root, 'rules/hong-kong-proxy.list'))}\n")
-    expected_rules = expected_rules.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join
+  if location == "mainland-china"
+    actual_rules = actual_rules.delete_prefix("#{File.read(File.join(root, 'rules/mainland-china.list'))}\n")
+    expected_rules = expected_rules.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:CDN|Proxy)\.list,}) }.join
+    expected_rules = expected_rules.sub("FINAL,🐟 Fallback Routing", "FINAL,DIRECT")
+    china_domains = expected_rules.lines.find { |line| line.start_with?("DOMAIN-SET,") && line.include?("/ChinaMax/") }
+    expected_rules = expected_rules.sub(china_domains, "").sub("// --- Services ---", "#{china_domains}// --- Services ---")
   end
+  actual_rules = actual_rules.delete_prefix("#{File.read(File.join(root, 'rules/hong-kong-proxy.list'))}\n")
+  expected_rules = expected_rules.lines.reject { |line| line.match?(%r{^RULE-SET,.*/(?:Claude|Gemini|TikTok)\.list,}) }.join
   abort "#{location}: unrelated routing rules changed" unless actual_rules == expected_rules
   selectors = profile.lines.grep(/ = select,/)
   abort "#{location}: missing selectors" unless selectors.size == base.lines.grep(/ = select,/).size
   selectors.each do |line|
     name, choices = line.strip.split(" = ", 2)
-    expected = location == "hong-kong" && !proxied_in_hk.include?(name) ? "DIRECT" : "PROXY"
+    direct = location == "hong-kong" ? !proxied_in_hk.include?(name) : ["🖥️ Microsoft Services", "🎮 Gaming Platforms", "📽️ Emby", "🐟 Fallback Routing"].include?(name)
+    expected = direct ? "DIRECT" : "PROXY"
     abort "#{location}: wrong default for #{name}" unless choices.split(",")[1] == expected && choices.split(",").include?("select=0")
   end
   expected_dns = {
@@ -142,6 +148,22 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
     check.call(scratch, [], error)
   end
   File.write(narrow_file, narrow_original)
+  mainland_file = File.join(scratch, "rules/mainland-china.list")
+  mainland_original = File.read(mainland_file)
+  {
+    "HOST-SUFFIX,alipay.com,DIRECT" => nil,
+    "DOMAIN-SUFFIX,alipay.com,PROXY" => "Alipay must be DIRECT before remote rules",
+    "DOMAIN-SUFFIX,amazonaws.com,🌏 Foreign Websites" => "routing case merchant.amazonaws.com",
+    "RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/CDN.list,🌏 Foreign Websites" => "AI/TikTok/foreign routes must use narrow domain rules"
+  }.each do |rule, error|
+    changed = rule.start_with?("HOST-SUFFIX,") ? mainland_original.sub("DOMAIN-SUFFIX,alipay.com,DIRECT", rule) : "#{rule}\n#{mainland_original}"
+    abort "Mutation target missing: #{mainland_file}" if changed == mainland_original
+    File.write(mainland_file, changed)
+    output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
+    abort "Profile regeneration failed: #{output}" unless status.success?
+    check.call(scratch, [], error)
+  end
+  File.write(mainland_file, mainland_original)
   output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
   abort "Profile regeneration failed: #{output}" unless status.success?
   check.call(scratch, [])
