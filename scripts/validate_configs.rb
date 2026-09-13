@@ -169,10 +169,15 @@ location_profiles(ROOT).each do |path, expected|
       errors << "#{path}: AI/TikTok/foreign routes must use narrow domain rules" unless %w[DOMAIN DOMAIN-SUFFIX].include?(normalized_rule(line).first)
     end
     first_remote = rules.index { |line| line.start_with?("RULE-SET,", "DOMAIN-SET,") }
-    %w[alipay.cn alipay.com alipay.com.cn alipay.hk alipay.net alipaydns.com alipayobjects.com alipayplus.com].each do |host|
+    # Keep required hosts independent of the source so deleting a rule still fails.
+    required_alipay = %w[alipay.cn alipay.com alipay.com.cn alipay.hk alipay.net alipaydns.com alipayobjects.com alipayplus.com]
+    extra_alipay = lines("rules/mainland-china.list").map { |line| normalized_rule(line) }.select { |kind, host, _| kind == "DOMAIN-SUFFIX" && host.start_with?("alipay") }.map { |_, host, _| host }
+    (required_alipay + extra_alipay).uniq.each do |host|
       match = matching_domain_rule(rules, "test.#{host}")
-      errors << "#{path}: Alipay must be DIRECT before remote rules: #{host}" unless match && match[2] == "DIRECT" && rules.index(match.join(",")) < first_remote
+      match_index = rules.index { |line| normalized_rule(line) == match }
+      errors << "#{path}: Alipay must be DIRECT before remote rules: #{host}" unless match && match[2] == "DIRECT" && match_index && first_remote && match_index < first_remote
     end
+    # Inline scope only. --mainland-routing in audit_remote_sources.rb expands remote lists.
     {
       "api.openai.com" => "🤖 OpenAI", "claude.ai" => "🧠 Claude",
       "gemini.google.com" => "💎 Google AI", "www.tiktok.com" => "📱 TikTok",

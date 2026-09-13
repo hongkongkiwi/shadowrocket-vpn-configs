@@ -151,6 +151,7 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
   mainland_file = File.join(scratch, "rules/mainland-china.list")
   mainland_original = File.read(mainland_file)
   {
+    "HOST-SUFFIX,alipay.com,DIRECT" => nil,
     "DOMAIN-SUFFIX,alipay.com,PROXY" => "Alipay must be DIRECT before remote rules",
     "DOMAIN-SUFFIX,amazonaws.com,🌏 Foreign Websites" => "routing case merchant.amazonaws.com",
     "RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/CDN.list,🌏 Foreign Websites" => "AI/TikTok/foreign routes must use narrow domain rules"

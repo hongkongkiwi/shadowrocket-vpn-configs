@@ -133,7 +133,61 @@ def audit_sources(urls)
   results
 end
 
+def expand_domain_rules(rules)
+  rules.flat_map do |line|
+    kind, value, policy = line.split(",").map(&:strip)
+    if %w[RULE-SET DOMAIN-SET].include?(kind)
+      review_rules(value, yield(value)).map { |rule| [*rule.split(",").first(2), policy] }
+    else
+      [[kind, value, policy]]
+    end
+  end
+end
+
+# Domain-only simulation: IP and user-agent matching need native client testing.
+def domain_rule_policy(rules, host)
+  rules.each do |kind, value, policy|
+    kind = kind.sub(/^HOST/, "DOMAIN")
+    case kind
+    when "FINAL" then return value
+    when "DOMAIN" then return policy if host == value
+    when "DOMAIN-SUFFIX" then return policy if host == value || host.end_with?(".#{value}")
+    when "DOMAIN-KEYWORD" then return policy if host.include?(value)
+    when "DOMAIN-WILDCARD" then return policy if File.fnmatch?(value, host)
+    when "IP-CIDR", "IP-CIDR6", "IP6-CIDR", "IP-ASN", "GEOIP", "USER-AGENT" then next
+    else raise "unsupported domain simulation rule: #{kind}"
+    end
+  end
+  nil
+end
+
+if ARGV == ["--mainland-routing"]
+  profile = File.read(File.join(ROOT, "mainland-china.conf"))
+  rules = profile.split("[Rule]\n", 2).fetch(1).split(/^\[/, 2).first.lines.map(&:strip)
+    .reject { |line| line.empty? || line.start_with?("#", ";", "//") }
+  expanded = expand_domain_rules(rules) do |url|
+    URI.open(url, read_timeout: 30, open_timeout: 15, redirect: false, &:read)
+  end
+  defaults = profile.lines.grep(/ = select,/).to_h { |line| [line.split(" = ").first, line.split(" = ").last.split(",")[1]] }
+  direct = %w[mobilegw.alipay.com mdn.alipayobjects.com www.alipay.hk www.taobao.com www.douyin.com weixin.qq.com yunbusiness.ccb.com www.abchina.com.cn cdnstatic.tencentcs.com merchant.amazonaws.com www.microsoft.com login.live.com steamcontent.com unlisted.example www.baidu.com]
+  proxy = %w[api.openai.com claude.ai gemini.google.com www.tiktok.com api.github.com api.githubcopilot.com www.google.com www.youtube.com www.reddit.com www.facebook.com www.instagram.com www.whatsapp.com steamcommunity.com www.netflix.com telegram.org]
+  cases = direct.to_h { |host| [host, "DIRECT"] }.merge(proxy.to_h { |host| [host, "PROXY"] })
+  cases.each do |host, expected|
+    policy = domain_rule_policy(expanded, host)
+    actual = defaults.fetch(policy, policy)
+    abort "Mainland domain case #{host}: expected #{expected}, got #{actual.inspect}" unless actual == expected
+  end
+  puts "Mainland remote-list domain checks passed (#{cases.length} cases; IP/user-agent matching and native traffic unverified)."
+  exit
+end
+
 if ARGV == ["--self-test"]
+  expanded = expand_domain_rules(["HOST-SUFFIX,alipay.com,DIRECT", "RULE-SET,proxy.list,PROXY", "DOMAIN-SET,china.list,DIRECT", "FINAL,DIRECT"]) do |url|
+    url == "proxy.list" ? "DOMAIN-SUFFIX,amazonaws.com\nDOMAIN-SUFFIX,alipay.com\n" : ".qq.com\n"
+  end
+  { "mobilegw.alipay.com" => "DIRECT", "merchant.amazonaws.com" => "PROXY", "weixin.qq.com" => "DIRECT", "unlisted.example" => "DIRECT" }.each do |host, expected|
+    raise "remote-list expansion/order regression for #{host}" unless domain_rule_policy(expanded, host) == expected
+  end
   raise "missed ASN scope" if scope_risks("IP-ASN,14061,no-resolve").empty?
   raise "missed TLD scope" if scope_risks("DOMAIN-SUFFIX,ai").empty?
   raise "missed shared scope" if scope_risks("DOMAIN,api.github.com").empty?
@@ -185,7 +239,7 @@ if ARGV.first == "--compare" && ARGV.length == 3
   end
   exit
 end
-abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test | --compare OLD_FILE NEW_FILE]" unless ARGV.empty?
+abort "Usage: ruby scripts/audit_remote_sources.rb [--self-test | --mainland-routing | --compare OLD_FILE NEW_FILE]" unless ARGV.empty?
 
 urls = PATHS.flat_map do |path|
   File.readlines(File.join(ROOT, path)).reject { |line| line.strip.start_with?("#", ";", "//", "update-url =") }

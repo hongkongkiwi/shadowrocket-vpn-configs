@@ -1,4 +1,4 @@
-# Narrow replacements for the three remote lists that route through a proxy in Hong Kong.
+# Narrow AI/TikTok replacements shared by both location profiles; filename retained for compatibility.
 # Reviewed 2026-09-10; see docs/rule-sources.md for pins, exclusions, and limits.
 # Claude: omit the shared Fathom analytics CDN.
 DOMAIN-SUFFIX,anthropic.com,🧠 Claude

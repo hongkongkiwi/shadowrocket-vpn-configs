@@ -108,8 +108,9 @@ It includes mainland DNS, so leave DNS modules off. Use Shadowrocket's **Config*
 routing mode so these rules apply. **Proxy** mode sends traffic through the proxy
 regardless of this profile's direct rules.
 
-Unmatched traffic uses `FINAL,DIRECT`. Alipay has early direct domain rules, and
-ChinaMax domain matches precede broad service lists. AI, international TikTok,
+Unmatched traffic uses `FINAL,DIRECT`; the retained Fallback Routing selector has
+no effect in this profile. Alipay has early direct domain rules, and ChinaMax
+domain matches precede broad service lists. AI, international TikTok,
 Google, GitHub, messaging, selected social sites, and overseas streaming keep
 proxy defaults. Microsoft, game downloads, and Emby default to `DIRECT`;
 Steam Community has a separate proxy rule. Generic CDN and foreign-site lists
