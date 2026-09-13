@@ -157,6 +157,7 @@ Dir.mktmpdir("shadowrocket-validator-") do |scratch|
     "RULE-SET,https://raw.githubusercontent.com/Repcz/Tool/b3c22feb3add856128c4a7f5353c06bb6ee8e31f/Shadowrocket/Rules/CDN.list,🌏 Foreign Websites" => "AI/TikTok/foreign routes must use narrow domain rules"
   }.each do |rule, error|
     changed = rule.start_with?("HOST-SUFFIX,") ? mainland_original.sub("DOMAIN-SUFFIX,alipay.com,DIRECT", rule) : "#{rule}\n#{mainland_original}"
+    abort "Mutation target missing: #{mainland_file}" if changed == mainland_original
     File.write(mainland_file, changed)
     output, status = Open3.capture2e(RbConfig.ruby, "scripts/generate_profiles.rb", chdir: scratch)
     abort "Profile regeneration failed: #{output}" unless status.success?

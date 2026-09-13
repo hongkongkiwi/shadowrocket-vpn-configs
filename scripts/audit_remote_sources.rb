@@ -280,7 +280,7 @@ urls.select! { |url| SOURCE_HOSTS.include?(URI(url).host) }
 urls.uniq!
 
 # Retain only mainland payloads, then reuse the exact audited bytes for routing.
-payloads = File.read(File.join(ROOT, "mainland-china.conf")).scan(/^(?:RULE-SET|DOMAIN-SET),([^,]+),/).flatten.to_h { |url| [url, nil] }
+payloads = File.read(File.join(ROOT, "mainland-china.conf")).scan(/^(?:RULE-SET|DOMAIN-SET),([^,]+),/i).flatten.to_h { |url| [url.strip, nil] }
 results = audit_sources(urls, payloads) do |url|
   URI.open(url, read_timeout: 30, open_timeout: 15, redirect: false, &:read)
 end
